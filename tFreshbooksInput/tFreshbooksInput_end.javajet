@@ -1,0 +1,63 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+	" 
+%>
+<%
+CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+INode node = (INode)codeGenArgument.getArgument();
+String cid = node.getUniqueName();	
+Boolean bprocessChild = false;
+String modulelabel;
+String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
+String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+String modulelabelchild = "";
+if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
+modulelabel = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
+}else {
+modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));
+modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);
+bprocessChild = true;
+}
+boolean dieOnError = ("true").equals(ElementParameterParser.getValue(node,"__DIE_ON_ERROR__"));	
+%>
+<%	if ( bprocessChild ) {//bprocessChild
+%>
+	}//childfor
+<%	}//bprocessChild
+%>	
+ 			nb_line_<%=cid %>++;
+			}//doc3
+		}//parentfor				
+iCurrentPage_<%=cid %>++;	
+		}//responseok
+		else{   	
+			iTotalPage_<%=cid %> = -1;
+			System.err.println(new Date()+ "-Error message is : " + eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent());
+			System.err.println(new Date()+ "-Error code is : " + eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent());
+			<%
+			    if ( dieOnError ) {
+			 %>
+				globalMap.put("<%=cid %>_XML_REQUEST",inputxml_<%=cid %>);
+				globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
+				globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);			 	
+				throw new RuntimeException("response from freshbook api() contains error");
+			<%
+				}
+			%>	
+			}			
+	}//doc_if_null	
+}//while page	
+globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid%>); 
+globalMap.put("<%=cid %>_XML_REQUEST",inputxml_<%=cid %>);
+globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
+globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);

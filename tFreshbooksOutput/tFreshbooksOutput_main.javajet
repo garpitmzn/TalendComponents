@@ -1,0 +1,168 @@
+<%@ jet
+imports="
+org.talend.core.model.process.INode
+org.talend.core.model.process.ElementParameterParser
+org.talend.core.model.metadata.IMetadataTable
+org.talend.core.model.metadata.IMetadataColumn
+org.talend.core.model.process.IConnection
+org.talend.core.model.process.IConnectionCategory
+org.talend.designer.codegen.config.CodeGeneratorArgument
+org.talend.core.model.process.EConnectionType
+org.talend.core.model.metadata.types.JavaTypesManager
+org.talend.core.model.metadata.types.JavaType
+java.util.List
+"
+%>
+<%
+CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+INode node = (INode)codeGenArgument.getArgument();
+String cid = node.getUniqueName();
+String fbs_authtoken = ElementParameterParser.getValue(node, "__FRESHBOOKSAUTHTOKEN__");
+String condition = ElementParameterParser.getValue(node, "__CONDITION__");
+Boolean bprocessChildNode = false;
+String xmlFirstChildNode;
+String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
+String action = ElementParameterParser.getValue(node, "__ACTION__");
+String modulenameallNode = ElementParameterParser.getValue(node, "__MODULENAME__");
+String xmlParentNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+String xmlLastChildNode = "";
+if (modulenameallNode.indexOf(":") ==  modulenameallNode.lastIndexOf(":")) {
+	xmlFirstChildNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
+}else {
+	xmlFirstChildNode = modulenameallNode.substring(modulenameallNode.indexOf(":")+1,modulenameallNode.lastIndexOf(":"));
+	xmlLastChildNode = modulenameallNode.substring(modulenameallNode.lastIndexOf(":")+1);
+	bprocessChildNode = true;
+}
+
+%>
+String inputxml_<%=cid %> = "";
+String inputxml_key_col_<%=cid %> = "";
+String inputxml_nonkey_col_<%=cid %> = "";
+//inputxml_key_col_<%=cid %>.append("");
+//inputxml_nonkey_col_<%=cid %>.append("");
+String response_error_msg_<%=cid%> = "";
+String response_error_code_<%=cid%> = "";
+org.apache.http.entity.StringEntity xml_<%=cid %>; 
+org.apache.http.impl.client.DefaultHttpClient client_<%=cid %>;
+org.apache.http.client.methods.HttpPost request_<%=cid %>;
+org.apache.http.HttpResponse response_<%=cid %>;
+java.io.InputStream in_<%=cid %>;
+org.w3c.dom.Document doc_<%=cid %>;
+String sResponseReceived_<%=cid %> = "";
+org.w3c.dom.NodeList nList_<%=cid %>;
+org.w3c.dom.Node nNode_<%=cid %>;
+org.w3c.dom.Element eElement_<%=cid %>  = null;
+javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+
+inputxml_<%=cid %> += "<?xml version='1.0' encoding='utf-8' ?>"+"\n";
+inputxml_<%=cid %> += "<request method=\"<%=xmlParentNode %>.<%=action %>\">" + "\n";	
+
+if ( !"<%=action %>".equals("delete") && !"<%=action %>".equals("resendToken") 
+	&& !"<%=action %>".equals("sendByEmail") && !"<%=action %>".equals("sendBySnailMail")  
+	&& !"<%=action %>".equals("add")
+	&& !"<%=modulenameallNode %>".contains(".lines:lines:line")
+) {//x
+	inputxml_<%=cid %> += "<" + "<%=xmlParentNode %>" + ">" + "\n";
+}//x
+<%
+List<IMetadataTable> metadatas = node.getMetadataList();
+if ((metadatas!=null)&&(metadatas.size()>0)) {//1
+    IMetadataTable metadata = metadatas.get(0);
+    if (metadata!=null) {//2
+    	List< ? extends IConnection> conns = node.getIncomingConnections();
+    	for (IConnection conn : conns) {//3
+    		if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {//4    			
+    			List<IMetadataColumn> columns = metadata.getListColumns();
+    			int sizeColumns = columns.size();
+    			for (int i = 0; i < sizeColumns; i++) {//5
+    				IMetadataColumn column = columns.get(i);
+        			JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+    				boolean isPrimitive = JavaTypesManager.isJavaPrimitiveType( javaType, column.isNullable());
+    				   			
+%>
+	<%if( !isPrimitive ) {	//prim
+	%>
+	if(<%=conn.getName() %>.<%=column.getLabel() %> != null) { //nullcheck
+	<%}
+		else{//prim
+	%>
+	if(!"".equals(String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>))) { //nullcheck
+	<%	}//prim
+	%>
+	if ( <%=bprocessChildNode %> && <%=column.isKey() %>) {//processchild
+		inputxml_key_col_<%=cid %> += "<" + "<%=column.getLabel()%>" + ">";	
+		inputxml_key_col_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+		inputxml_key_col_<%=cid %> += "</" + "<%=column.getLabel()%>" + ">" + "\n";	
+	}//processchild
+	else
+	{
+		inputxml_nonkey_col_<%=cid %> += "<" + "<%=column.getLabel()%>" + ">";	
+		inputxml_nonkey_col_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+		inputxml_nonkey_col_<%=cid %> += "</" + "<%=column.getLabel()%>" + ">" + "\n";
+	}		
+	}//nullcheck
+<%
+				}//5
+    		}//4
+    	}//3
+    }//2
+}//1
+%>
+inputxml_<%=cid %> += inputxml_key_col_<%=cid %>;
+if ( <%=bprocessChildNode %> && !"<%=action %>".equals("delete")){
+	inputxml_<%=cid %> += "<"+ "<%=xmlFirstChildNode %>" + ">" + "\n";
+	inputxml_<%=cid %> += "<" + "<%=xmlLastChildNode %>" + ">" + "\n";
+}
+inputxml_<%=cid %> += inputxml_nonkey_col_<%=cid %>;
+if ( <%=bprocessChildNode %> && !"<%=action %>".equals("delete")){
+	inputxml_<%=cid %> += "</" + "<%=xmlLastChildNode %>" + ">" + "\n";	
+	inputxml_<%=cid %> += "</" + "<%=xmlFirstChildNode %>" + ">" + "\n";	
+}
+
+if ( !"<%=action %>".equals("delete") && !"<%=action %>".equals("resendToken")
+	&& !"<%=action %>".equals("sendByEmail") && !"<%=action %>".equals("sendBySnailMail")
+	&& !"<%=action %>".equals("add")
+	&& !"<%=modulenameallNode %>".contains(".lines:lines:line")
+) {//x
+	inputxml_<%=cid %> += "</" + "<%=xmlParentNode %>" + ">" + "\n";
+}//x
+inputxml_<%=cid %> += "</request>";
+
+
+	xml_<%=cid %> = new org.apache.http.entity.StringEntity(inputxml_<%=cid %>, "UTF-8");
+ 	request_<%=cid %>= new org.apache.http.client.methods.HttpPost( <%=fbs_apiurl%> );
+	request_<%=cid %>.addHeader( "Authorization", "Basic "+fbs_authtoken_encoded_<%=cid %>); // Pass in the OAuth parameters you built up
+	request_<%=cid %>.addHeader( "Content-Type", "application/x-www-form-urlencoded");
+	request_<%=cid %>.addHeader( "User-Agent", "FreshBooks-tFreshbooksInput" );
+	request_<%=cid %>.removeHeaders( "Content-Length" );
+	request_<%=cid %>.setEntity( xml_<%=cid %> );
+	System.out.println("Requesting xml is "+inputxml_<%=cid %>);
+	globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);	
+	/* Make api() call to freshbooks */
+ 	client_<%=cid %> = new org.apache.http.impl.client.DefaultHttpClient();
+	System.out.println("Executing request");
+ 	response_<%=cid %> = client_<%=cid %>.execute(request_<%=cid %>);
+ 	in_<%=cid %> = response_<%=cid %>.getEntity().getContent();
+	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+ 	doc_<%=cid %> = builder_<%=cid %>.parse(in_<%=cid %>);
+	if (doc_<%=cid %> != null) {//doc_if_null
+    	nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("response");
+    	nNode_<%=cid %> = nList_<%=cid %>.item(0);
+	    eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
+   		sResponseReceived_<%=cid %> = eElement_<%=cid %>.getAttribute("status");	    
+		if (sResponseReceived_<%=cid %>.toLowerCase().equals("ok")) {//responseok		
+			 
+			nb_line_<%=cid %>++;
+	}//responseok
+	else
+	{
+		System.err.println(new Date()+ "-Error message is : " + eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent());
+		System.err.println(new Date()+ "-Error code is : " + eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent());
+		throw new RuntimeException("response from freshbook api() contains error");
+	}
+}//doc_if_null
+else
+{
+	System.err.println(new Date()+ "-Error message is : " + eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent());
+	throw new RuntimeException("response from freshbook api() contains error");	
+}//doc_if_null

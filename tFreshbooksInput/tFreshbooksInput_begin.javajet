@@ -1,0 +1,156 @@
+<%@ jet
+imports="
+org.talend.core.model.process.INode
+org.talend.core.model.process.ElementParameterParser
+org.talend.core.model.metadata.IMetadataTable
+org.talend.core.model.metadata.IMetadataColumn
+org.talend.core.model.process.IConnection
+org.talend.core.model.process.IConnectionCategory
+org.talend.designer.codegen.config.CodeGeneratorArgument
+org.talend.core.model.process.EConnectionType
+org.talend.core.model.metadata.types.JavaTypesManager
+org.talend.core.model.metadata.types.JavaType
+java.util.List
+java.util.HashMap
+java.util.Map
+java.util.ArrayList
+
+"
+%>
+<%
+CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+INode node = (INode)codeGenArgument.getArgument();
+String cid = node.getUniqueName();
+String fbs_authtoken = ElementParameterParser.getValue(node, "__FRESHBOOKSAUTHTOKEN__");
+String condition = ElementParameterParser.getValue(node, "__CONDITION__");
+Boolean bprocessChild = false;
+String modulelabel;
+String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
+String post_method = ElementParameterParser.getValue(node, "__POST_METHOD__");
+String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+String modulelabelchild = "";
+if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
+	modulelabel = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
+}else {
+	modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));
+	modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);
+	bprocessChild = true;
+}
+String ColumnFilterString = "";
+List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
+int size_filter_input_list = filter_input_list.size();
+%>
+int nb_line_<%=cid %> = 0;
+String fbs_authtoken_<%=cid %> = <%=fbs_authtoken%>+":X";
+String fbs_authtoken_encoded_<%=cid %> = new String(org.apache.commons.codec.binary.Base64.encodeBase64(fbs_authtoken_<%=cid %>.getBytes()));
+String inputxml_<%=cid %> = "";
+String strfilterCondition_<%=cid %>="";
+String response_error_msg_<%=cid%> = "";
+String response_error_code_<%=cid%> = "";
+<%
+for(int g = 0; g < size_filter_input_list; g++){ //for-size_filter_input
+	Map<String, String> filter_input_listmap = filter_input_list.get(g);
+	String inputColumn = filter_input_listmap.get("FILTER_COLUMN");
+	String inputValue = filter_input_listmap.get("FILTER_VALUE");
+%>
+	strfilterCondition_<%=cid %> = strfilterCondition_<%=cid %> + "<<%=inputColumn%>>";
+	strfilterCondition_<%=cid %> = strfilterCondition_<%=cid %> + <%=inputValue%>+"</<%=inputColumn%>>";
+<%	
+}//for-size_filter_input
+%>
+org.apache.http.entity.StringEntity xml_<%=cid %>; 
+org.apache.http.impl.client.DefaultHttpClient client_<%=cid %>;
+org.apache.http.client.methods.HttpPost request_<%=cid %>;
+org.apache.http.HttpResponse response_<%=cid %>;
+Integer iTotalPage_<%=cid %> = 1;
+Integer iCurrentPage_<%=cid %> = 1;
+Integer iFirstParseDoneFlag_<%=cid %> = 0;
+java.io.InputStream in_<%=cid %>;
+org.w3c.dom.Document doc_<%=cid %>;
+String sResponseReceived_<%=cid %> = "";
+javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+org.w3c.dom.NodeList nList_schemacol_<%=cid %>;
+org.w3c.dom.NodeList nList_schemacol_child_<%=cid %>;
+org.w3c.dom.Node nNode_child_<%=cid %>;
+org.w3c.dom.Element eElement_child_<%=cid %>;
+org.w3c.dom.NodeList nList_child_<%=cid %>;
+
+/*We keep fetching till we get all pages */
+while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
+	if ("<%=modulename %>".equals("member")) {
+		if ("<%=post_method %>".equals("List")) {//2
+			inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.list\">";
+		}//2
+		else{
+			inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.get\">";
+		}//2
+	}else{
+		if ("<%=post_method %>".equals("List")) {//2a
+			inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"<%=modulename %>.list\">";
+		}else{//2a
+			if ("<%=post_method %>".equals("Get")) {//2b
+				inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"<%=modulename %>.get\">";
+			}//2b
+			if ("<%=post_method %>".equals("Current")) {//2c
+				inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"<%=modulename %>.current\">";
+			}//2c				
+		}//2a			
+	}
+	if ("<%=post_method %>".equals("List")) {
+		inputxml_<%=cid %>  = inputxml_<%=cid %> + "<page>"+iCurrentPage_<%=cid %>.toString()+"</page>";
+	}	
+	inputxml_<%=cid %>  = inputxml_<%=cid %> + strfilterCondition_<%=cid %> + "</request>";
+	xml_<%=cid %> = new org.apache.http.entity.StringEntity(inputxml_<%=cid %>, "UTF-8");
+ 	request_<%=cid %>= new org.apache.http.client.methods.HttpPost( <%=fbs_apiurl%> );
+	request_<%=cid %>.addHeader( "Authorization", "Basic "+fbs_authtoken_encoded_<%=cid %>); // Pass in the OAuth parameters you built up
+	request_<%=cid %>.addHeader( "Content-Type", "application/x-www-form-urlencoded");
+	request_<%=cid %>.addHeader( "User-Agent", "FreshBooks-tFreshbooksInput" );
+	request_<%=cid %>.removeHeaders( "Content-Length" );
+	request_<%=cid %>.setEntity( xml_<%=cid %> );
+	System.out.println("Requesting xml is "+inputxml_<%=cid %>);
+	/* Make api() call to freshbooks */
+ 	client_<%=cid %> = new org.apache.http.impl.client.DefaultHttpClient();
+	System.out.println("Executing request");
+ 	response_<%=cid %> = client_<%=cid %>.execute(request_<%=cid %>);
+ 	in_<%=cid %> = response_<%=cid %>.getEntity().getContent();
+	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+ 	doc_<%=cid %> = builder_<%=cid %>.parse(in_<%=cid %>);
+	if (doc_<%=cid %> != null) {//doc_if_null
+    	org.w3c.dom.NodeList nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("response");
+    	org.w3c.dom.Node nNode_<%=cid %> = nList_<%=cid %>.item(0);
+	    org.w3c.dom.Element eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
+   		sResponseReceived_<%=cid %> = eElement_<%=cid %>.getAttribute("status");	
+	    
+	    if (sResponseReceived_<%=cid %>.toLowerCase().equals("ok")) {//responseok
+    	if ("<%=post_method %>".equals("List")) {//postmethodlist
+   		   	nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulelabel%>");
+    		System.out.println(nList_<%=cid %>.getLength());
+    		nNode_<%=cid %> = nList_<%=cid %>.item(0);
+    		eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
+   	
+			//System.out.println("page : " + eElement_<%=cid %>.getAttribute("page"));
+			//iCurrentPage = Integer.parseInt(eElement.getAttribute("page"));
+			//System.out.println("pages : " + eElement_<%=cid %>.getAttribute("pages"));
+			if (iFirstParseDoneFlag_<%=cid %> == 0){
+				iTotalPage_<%=cid %> = Integer.parseInt(eElement_<%=cid %>.getAttribute("pages"));
+				iFirstParseDoneFlag_<%=cid %> = 1;
+			}
+			//System.out.println("totalpage is "+iTotalPage_<%=cid %>.toString());
+			//System.out.println("total : " + eElement_<%=cid %>.getAttribute("total"));
+		}//postmethodlist
+    	nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
+    	//System.out.println(nList_<%=cid %>.getLength());
+    	//System.out.println("total rows returned "+nList_<%=cid %>.getLength());
+    	for (int i_<%=cid %> = 0; i_<%=cid %> < nList_<%=cid %>.getLength(); i_<%=cid %>++) {//parentfor
+			nNode_<%=cid %> = nList_<%=cid %>.item(i_<%=cid %>);
+ 			if (nNode_<%=cid %>.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {//doc3
+ 				eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>; 
+			<%	if ( bprocessChild ) {//bprocessChild
+			%>
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("<%=modulelabelchild%>");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+			<%	}//bprocessChild
+			%>

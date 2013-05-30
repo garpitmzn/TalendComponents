@@ -1,0 +1,130 @@
+<%@ jet
+imports="
+org.talend.core.model.process.INode
+org.talend.core.model.process.ElementParameterParser
+org.talend.core.model.metadata.IMetadataTable
+org.talend.core.model.metadata.IMetadataColumn
+org.talend.core.model.process.IConnection
+org.talend.core.model.process.IConnectionCategory
+org.talend.designer.codegen.config.CodeGeneratorArgument
+org.talend.core.model.process.EConnectionType
+org.talend.core.model.metadata.types.JavaTypesManager
+org.talend.core.model.metadata.types.JavaType
+java.util.List
+"
+%>
+<%
+CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+INode node = (INode)codeGenArgument.getArgument();
+String cid = node.getUniqueName();
+Boolean bprocessChild = false;
+String modulelabel;
+String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
+String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+String modulelabelchild = "";
+if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
+	modulelabel = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
+}else {
+	modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));
+	modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);
+	bprocessChild = true;
+} 
+%>
+	
+<%
+List<IMetadataTable> metadatas = node.getMetadataList();
+if ((metadatas != null) && (metadatas.size() > 0)) 
+{//b
+ IMetadataTable metadata = metadatas.get(0);
+ if (metadata != null) 
+ {//a
+  List<IMetadataColumn> columns = metadata.getListColumns();	
+  List< ? extends IConnection> outConns = node.getOutgoingConnections();
+  for (IConnection conn : outConns) 
+  { //2	
+   if (conn.getLineStyle().equals(EConnectionType.FLOW_MAIN)||conn.getLineStyle().equals(EConnectionType.FLOW_MERGE))
+   { //3
+    String outputConnName = conn.getName();
+	for (int i = 0; i < columns.size(); i++) 
+		{//4
+			IMetadataColumn column = columns.get(i);
+			String ttg = JavaTypesManager.getTypeToGenerate(column.getTalendType(), column.isNullable());
+			if ( !bprocessChild || ( bprocessChild == true && column.isKey() == true)){ //processchild
+			/*process parent only key columns as child columns we will get from child node*/			
+%>			
+			nList_schemacol_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>");
+			 if (nList_schemacol_<%=cid %>.getLength() > 0) {//sizecheck
+				if (eElement_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent() != null
+			 	&& eElement_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent().length() !=0)
+				{
+<%      			if (ttg.equals("String")){
+%>
+		<%=outputConnName %>.<%=column.getLabel() %> = eElement_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent();		
+<% 		} //string  
+		else 
+		if (ttg.equals("Integer")){
+%>
+		<%=outputConnName %>.<%=column.getLabel() %> =  Integer.parseInt(eElement_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent());		
+<%	
+	}//integer
+		else 
+		if (ttg.equals("Float")){	
+%>
+		<%=outputConnName %>.<%=column.getLabel() %> =  Float.parseFloat(eElement_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent());
+<%	
+	}//float	
+%>		
+	}//nullcheck
+	else {
+		<%=outputConnName %>.<%=column.getLabel() %> = <%=JavaTypesManager.getDefaultValueFromJavaType(ttg)%>;
+	}
+	}//sizecheck
+	else{
+	<%=outputConnName %>.<%=column.getLabel() %> = <%=JavaTypesManager.getDefaultValueFromJavaType(ttg)%>;
+	}
+<%
+	}//processchildisfalse
+	else {//processchildistrue
+%>	
+			nList_schemacol_<%=cid %> = eElement_child_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>");
+			 if (nList_schemacol_<%=cid %>.getLength() > 0) {//sizecheck
+				if (eElement_child_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent() != null
+			 	&& eElement_child_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent().length() !=0)
+				{
+<%      			if (ttg.equals("String")){
+%>
+		<%=outputConnName %>.<%=column.getLabel() %> = eElement_child_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent();		
+<% 		} //string  
+		else 
+		if (ttg.equals("Integer")){
+%>
+		<%=outputConnName %>.<%=column.getLabel() %> =  Integer.parseInt(eElement_child_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent());		
+<%	
+	}//integer
+		else 
+		if (ttg.equals("Float")){	
+%>
+		<%=outputConnName %>.<%=column.getLabel() %> =  Float.parseFloat(eElement_child_<%=cid %>.getElementsByTagName("<%=column.getLabel() %>").item(0).getTextContent());
+<%	
+	}//float	
+%>		
+	}//nullcheck
+	else {
+	<%=outputConnName %>.<%=column.getLabel() %> = <%=JavaTypesManager.getDefaultValueFromJavaType(ttg)%>;
+	}
+	}//sizecheck
+	else{
+	<%=outputConnName %>.<%=column.getLabel() %> = <%=JavaTypesManager.getDefaultValueFromJavaType(ttg)%>;
+	}
+<%	
+	}//processchildistrue else
+	}//4
+%>	
+//	nb_line_<%=cid %>++;
+<%	
+   }//3
+  }//2
+ }//a
+}//b
+%>
