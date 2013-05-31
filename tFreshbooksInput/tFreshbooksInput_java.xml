@@ -106,7 +106,7 @@
          <COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="10" NAME="billable" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="1" NAME="billable" NULLABLE="false" TYPE="id_Integer"/>
          <COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
          <COLUMN KEY="false" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>
       </TABLE>
@@ -136,11 +136,14 @@
          <COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="20" NAME="hours" NULLABLE="true" TYPE="id_Integer"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="hours" NULLABLE="true" TYPE="id_Float"/>
          <COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="20" NAME="billed" NULLABLE="true" TYPE="id_String"/>
 		</TABLE>
+      <TABLE IF="MODULENAME=='Receipts'">
+		<COLUMN KEY="false" LENGTH="100" NAME="expense_id" NULLABLE="false" TYPE="id_String"/>
+		</TABLE>	
       <TABLE IF="MODULENAME=='Expenses'">
 		<COLUMN KEY="false" LENGTH="100" NAME="expense_id" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="category_id" NULLABLE="true" TYPE="id_String"/>
@@ -353,7 +356,7 @@
 	</TABLE>
     <TABLE IF="MODULENAME=='ProjectBudget'">
 		<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="false" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="hours" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="hours" NULLABLE="true" TYPE="id_Float"/>
 	</TABLE>
       <TABLE IF="MODULENAME=='Gateway'">
 		<COLUMN KEY="false" LENGTH="100" NAME="name" NULLABLE="true" TYPE="id_String"/>
@@ -391,7 +394,7 @@
 		<COLUMN KEY="false" LENGTH="100" NAME="name" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="10" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
 		<COLUMN KEY="false" LENGTH="30" NAME="number" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="10" NAME="compound" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="1" NAME="compound" NULLABLE="true" TYPE="id_Integer"/>
 		<COLUMN KEY="false" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>		
 	</TABLE>
       <TABLE IF="MODULENAME=='Callbacks'">
@@ -498,14 +501,18 @@
 		<ITEMS DEFAULT="List">
 			<ITEM NAME="List" VALUE="List" SHOW_IF="(MODULENAME!='System' and MODULENAME!='SystemAddress' 
 				and MODULENAME!='SystemApi' and MODULENAME!='SystemDescription' 
-				and MODULENAME!='SystemNotifications')"/>
+				and MODULENAME!='SystemNotifications')
+				and MODULENAME!='Receipts')"/>
 			<ITEM NAME="Get" VALUE="Get" SHOW_IF="(MODULENAME!='System' and MODULENAME!='SystemAddress' 
 				and MODULENAME!='SystemApi' and MODULENAME!='SystemDescription' 
 				and MODULENAME!='SystemNotifications' and MODULENAME!='Callbacks'
+				and MODULENAME!='Gateway'
 				)"/>
 			<ITEM NAME="Current" VALUE="Current" SHOW_IF="(MODULENAME=='System'
 			or MODULENAME=='SystemAddress' or MODULENAME=='SystemApi' 
-			or MODULENAME=='SystemDescription' or MODULENAME=='SystemNotifications')"/>
+			or MODULENAME=='SystemDescription' or MODULENAME=='SystemNotifications'
+			or MODULENAME=='Staff'
+			)"/>
 		</ITEMS>						
     </PARAMETER>	
 	 <PARAMETER NAME="FILTER_INPUT" FIELD="TABLE" NUM_ROW="60" NB_LINES="4">
@@ -514,6 +521,70 @@
         <ITEM NAME="FILTER_VALUE" FIELD="String" VALUE='""' />
       </ITEMS>
     </PARAMETER>
+  	<PARAMETER NAME="DATE_FROM" FIELD="TEXT" NUM_ROW="70" REQUIRED="false" 
+		SHOW_IF="(POST_METHOD == 'List') and (MODULENAME == 'Clients' or
+					MODULENAME == 'Invoices' or
+					MODULENAME == 'InvoiceContacts' or
+					MODULENAME == 'InvoiceLines' or
+					MODULENAME == 'InvoiceLinks' or
+					MODULENAME == 'Payments' or
+					MODULENAME == 'Recurring' or
+					MODULENAME == 'RecurringContacts' or
+					MODULENAME == 'RecurringLines')" >
+		<DEFAULT>YYYY-MM-DD</DEFAULT>
+	</PARAMETER>	
+  	<PARAMETER NAME="DATE_TO" FIELD="TEXT" NUM_ROW="70" REQUIRED="false"
+	SHOW_IF="(POST_METHOD == 'List') and (MODULENAME == 'Clients' or
+					MODULENAME == 'Invoices' or
+					MODULENAME == 'InvoiceContacts' or
+					MODULENAME == 'InvoiceLines' or
+					MODULENAME == 'InvoiceLinks' or
+					MODULENAME == 'Payments' or
+					MODULENAME == 'Recurring' or
+					MODULENAME == 'RecurringContacts' or
+					MODULENAME == 'RecurringLines')">
+		<DEFAULT>YYYY-MM-DD</DEFAULT>
+	</PARAMETER>	
+  	<PARAMETER NAME="UPDATED_FROM" FIELD="TEXT" NUM_ROW="80" REQUIRED="false"
+		SHOW_IF="(POST_METHOD == 'List') and (MODULENAME == 'Estimates' or
+			MODULENAME == 'EstimatesContacts' or
+			MODULENAME == 'EstimatesLines' or
+			MODULENAME == 'EstimatesLinks' or
+			MODULENAME == 'Expenses' or
+			MODULENAME == 'Invoices' or
+			MODULENAME == 'InvoiceContacts' or
+			MODULENAME == 'InvoiceLines' or
+			MODULENAME == 'InvoiceLinks' or
+			MODULENAME == 'Payments' or
+			MODULENAME == 'Recurring' or
+			MODULENAME == 'RecurringContacts' or
+			MODULENAME == 'RecurringLines')"
+	>
+		<DEFAULT>YYYY-MM-DD HH:MI:SS</DEFAULT>
+	</PARAMETER>	
+  	<PARAMETER NAME="UPDATED_TO" FIELD="TEXT" NUM_ROW="80" REQUIRED="false"
+	SHOW_IF="(POST_METHOD == 'List') and (MODULENAME == 'Estimates' or
+			MODULENAME == 'EstimatesContacts' or
+			MODULENAME == 'EstimatesLines' or
+			MODULENAME == 'EstimatesLinks' or
+			MODULENAME == 'Expenses' or
+			MODULENAME == 'Invoices' or
+			MODULENAME == 'InvoiceContacts' or
+			MODULENAME == 'InvoiceLines' or
+			MODULENAME == 'InvoiceLinks' or
+			MODULENAME == 'Payments' or
+			MODULENAME == 'Recurring' or
+			MODULENAME == 'RecurringContacts' or
+			MODULENAME == 'RecurringLines')"
+	>
+		<DEFAULT>YYYY-MM-DD HH:MI:SS</DEFAULT>
+	</PARAMETER>
+  	<PARAMETER NAME="SPECIFIC_PAGE_FILTER" FIELD="TEXT" NUM_ROW="90" REQUIRED="false">
+	</PARAMETER>
+  	<PARAMETER NAME="PER_PAGE_RESULT_LIMIT" FIELD="TEXT" NUM_ROW="90" REQUIRED="false">
+  		<DEFAULT>50</DEFAULT>
+	</PARAMETER>
+		
   	<PARAMETER NAME="DIE_ON_ERROR" FIELD="CHECK" NUM_ROW="100" REQUIRED="true">
 		<DEFAULT>true</DEFAULT>
 	</PARAMETER>	

@@ -57,25 +57,14 @@
 		<ITEM NAME="Expenses" VALUE="expense:expenses" />
 		<ITEM NAME="Invoices" VALUE="invoice:invoices" />
 		<ITEM NAME="InvoiceLines" VALUE="invoice.lines:lines:line" />
-		<ITEM NAME="Items" VALUE="item" />
-		<ITEM NAME="Languages" VALUE="language:languages" />
+		<ITEM NAME="Items" VALUE="item:items" />
 		<ITEM NAME="Payments" VALUE="payment:payments" />
 		<ITEM NAME="Projects" VALUE="project:projects" />
-		<ITEM NAME="ProjectBudget" VALUE="project:projects:budget" />
-		<ITEM NAME="ProjectContractors" VALUE="project:projects:contractor" />
-		<ITEM NAME="ProjectStaff" VALUE="project:projects:staff" />
-		<ITEM NAME="ProjectTasks" VALUE="project:projects:task" />
+		<ITEM NAME="ProjectTasks" VALUE="project:tasks:task" />
 		<ITEM NAME="Receipts" VALUE="receipt:receipts" />
 		<ITEM NAME="Recurring" VALUE="recurring:recurrings" />
-		<ITEM NAME="RecurringContacts" VALUE="recurring:recurrings:contact" />		
-		<ITEM NAME="RecurringLines" VALUE="recurring:recurrings:line" />
-		<ITEM NAME="Staff" VALUE="member:staff_members" />
-		<ITEM NAME="StaffProjects" VALUE="member:staff_members:project" />
-		<ITEM NAME="System" VALUE="system:systems" />
-		<ITEM NAME="SystemAddress" VALUE="system:systems:address" />
-		<ITEM NAME="SystemApi" VALUE="system:systems:api" />
-		<ITEM NAME="SystemDescription" VALUE="system:systems:description_info" />
-		<ITEM NAME="SystemNotifications" VALUE="system:systems:notifications" />		
+		<ITEM NAME="RecurringContacts" VALUE="recurring:contacts:contact" />		
+		<ITEM NAME="RecurringLines" VALUE="recurring.lines:lines:line" />
 		<ITEM NAME="Tasks" VALUE="task:tasks" />
 		<ITEM NAME="Taxes" VALUE="tax:taxes" />
 		<ITEM NAME="TimeEntries" VALUE="time_entry:time_entries" />
@@ -84,16 +73,21 @@
 	<PARAMETER NAME="ACTION" FIELD="CLOSED_LIST" NUM_ROW="40"
 		REQUIRED="true">
 		<ITEMS DEFAULT="create">
-			<ITEM NAME="add" VALUE="add" SHOW_IF="(MODULENAME=='InvoiceLines')"/>
+			<ITEM NAME="add" VALUE="add" SHOW_IF="(MODULENAME=='InvoiceLines') or (MODULENAME=='RecurringLines')"/>
 			<ITEM NAME="create" VALUE="create" SHOW_IF="(MODULENAME!='ClientContacts')
 				and (MODULENAME!='EstimatesContacts') and (MODULENAME!='EstimatesLines')
 				and (MODULENAME!='EstimatessendByEmail')
-				and (MODULENAME!='InvoiceLines')"/>
+				and (MODULENAME!='InvoiceLines')
+				and (MODULENAME!='RecurringLines')
+				and (MODULENAME!='RecurringContacts')
+				and (MODULENAME!='ProjectTasks')"/>
 			<ITEM NAME="update" VALUE="update" SHOW_IF="(MODULENAME!='Callbacks')
 				and (MODULENAME!='EstimatessendByEmail')"/>
 			<ITEM NAME="delete" VALUE="delete" SHOW_IF="(MODULENAME!='ClientContacts') 
 				and (MODULENAME!='EstimatesContacts') and (MODULENAME!='EstimatesLines')
-				and (MODULENAME!='EstimatessendByEmail')"/>
+				and (MODULENAME!='EstimatessendByEmail')
+				and (MODULENAME!='RecurringContacts')				
+				and (MODULENAME!='ProjectTasks')"/>
 			<ITEM NAME="verify" VALUE="verify" SHOW_IF="(MODULENAME=='Callbacks')"/>
 			<ITEM NAME="resendToken" VALUE="resendToken" SHOW_IF="(MODULENAME=='Callbacks')"/>
 			<ITEM NAME="sendByEmail" VALUE="sendByEmail" SHOW_IF="(MODULENAME=='Estimates') 
@@ -103,15 +97,15 @@
 	</PARAMETER>
 	
 	<PARAMETER NAME="SCHEMA" FIELD="SCHEMA_TYPE"  NUM_ROW="50"  REQUIRED="true" >
-      <TABLE IF="(MODULENAME=='Items') and (ACTION=='create')">
+    <TABLE IF="(MODULENAME=='Items') and (ACTION=='create')">
          <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
 		 <COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
 		 <COLUMN KEY="false" LENGTH="20" NAME="unit_cost" NULLABLE="true" TYPE="id_Float"/>
 		 <COLUMN KEY="false" LENGTH="20" NAME="quantity" NULLABLE="true" TYPE="id_Integer"/>
 		 <COLUMN KEY="false" LENGTH="20" NAME="inventory" NULLABLE="true" TYPE="id_Integer"/>
 		 <COLUMN KEY="false" LENGTH="20" NAME="folder" NULLABLE="true" TYPE="id_String"/>
-		 </TABLE>
-      <TABLE IF="(MODULENAME=='Items') and (ACTION=='update')">
+	</TABLE>
+    <TABLE IF="(MODULENAME=='Items') and (ACTION=='update')">
       	<COLUMN KEY="true" LENGTH="100" NAME="item_id" NULLABLE="false" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
 		 <COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
@@ -119,21 +113,25 @@
 		 <COLUMN KEY="false" LENGTH="20" NAME="quantity" NULLABLE="true" TYPE="id_Integer"/>
 		 <COLUMN KEY="false" LENGTH="20" NAME="inventory" NULLABLE="true" TYPE="id_Integer"/>
 		 <COLUMN KEY="false" LENGTH="20" NAME="folder" NULLABLE="true" TYPE="id_String"/>
-		 </TABLE>
+	</TABLE>
       <TABLE IF="(MODULENAME=='Items') and (ACTION=='delete')">
       	<COLUMN KEY="true" LENGTH="100" NAME="item_id" NULLABLE="false" TYPE="id_String"/>
 		 </TABLE>
-      <TABLE IF="MODULENAME=='Tasks'">
-         <COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
+      <TABLE IF="(MODULENAME=='Tasks') and (ACTION=='create')">
+         <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="10" NAME="billable" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="1" NAME="billable" NULLABLE="false" TYPE="id_Integer"/>
          <COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
-         <COLUMN KEY="false" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>
       </TABLE>
-      <TABLE IF="MODULENAME=='Languages'">
-         <COLUMN KEY="false" LENGTH="20" NAME="code" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="100" NAME="name" NULLABLE="true" TYPE="id_String"/>
+      <TABLE IF="(MODULENAME=='Tasks') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="task_id" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="1" NAME="billable" NULLABLE="false" TYPE="id_Integer"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
+      </TABLE>
+      <TABLE IF="(MODULENAME=='Tasks') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="task_id" NULLABLE="false" TYPE="id_String"/>
       </TABLE>
       <TABLE IF="(MODULENAME=='Categories') and (ACTION=='create') ">
          <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
@@ -145,27 +143,47 @@
       <TABLE IF="(MODULENAME=='Categories') and (ACTION=='delete') ">
          <COLUMN KEY="true" LENGTH="100" NAME="category_id" NULLABLE="false" TYPE="id_String"/>
       </TABLE>
-      <TABLE IF="MODULENAME=='Payments'">
-         <COLUMN KEY="false" LENGTH="100" NAME="payment_id" NULLABLE="true" TYPE="id_String"/>
+      <TABLE IF="(MODULENAME=='Payments') and (ACTION=='create')">
+         <COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="100" NAME="invoice_id" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="amount" NULLABLE="true" TYPE="id_Float"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="20" NAME="type" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="20" NAME="amount" NULLABLE="true" TYPE="id_Float"/>
-         <COLUMN KEY="false" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="255" NAME="from_credit" NULLABLE="true" TYPE="id_String"/>
 		</TABLE>
-      <TABLE IF="MODULENAME=='TimeEntries'">
-         <COLUMN KEY="false" LENGTH="100" NAME="time_entry_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="20" NAME="hours" NULLABLE="true" TYPE="id_Integer"/>
+      <TABLE IF="(MODULENAME=='Payments') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="payment_id" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="invoice_id" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="amount" NULLABLE="true" TYPE="id_Float"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="type" NULLABLE="true" TYPE="id_String"/>
          <COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
-         <COLUMN KEY="false" LENGTH="20" NAME="billed" NULLABLE="true" TYPE="id_String"/>
+		</TABLE>
+      <TABLE IF="(MODULENAME=='Payments') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="payment_id" NULLABLE="false" TYPE="id_String"/>
+		</TABLE>
+      <TABLE IF="(MODULENAME=='TimeEntries') and (ACTION=='create')">
+         <COLUMN KEY="false" LENGTH="100" NAME="project_id" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="hours" NULLABLE="true" TYPE="id_Float"/>
+         <COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+		</TABLE>
+      <TABLE IF="(MODULENAME=='TimeEntries') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="time_entry_id" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="project_id" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="hours" NULLABLE="true" TYPE="id_Float"/>
+         <COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+		</TABLE>
+      <TABLE IF="(MODULENAME=='TimeEntries') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="time_entry_id" NULLABLE="false" TYPE="id_String"/>
 		</TABLE>
       <TABLE IF="(MODULENAME=='Expenses') and (ACTION=='create')">
 		<COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
@@ -376,46 +394,10 @@
       <TABLE IF="(MODULENAME=='InvoiceLines') and (ACTION=='delete')">
 		<COLUMN KEY="true" LENGTH="100" NAME="invoice_id" NULLABLE="false" TYPE="id_String"/>
 		<COLUMN KEY="true" LENGTH="100" NAME="line_id" NULLABLE="false" TYPE="id_String"/>
-	</TABLE>	
-      <TABLE IF="MODULENAME=='Recurring'">
-		<COLUMN KEY="false" LENGTH="100" NAME="recurring_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="frequency" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="occurrences" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="stopped" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="prorate_days" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="autobill" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="organization" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="first_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="last_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="p_street1" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="p_street2" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="p_city" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="p_state" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="p_country" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="50" NAME="p_code" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="50" NAME="vat_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="50" NAME="vat_number" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="language" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="po_number" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="status" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="amount" NULLABLE="true" TYPE="id_Float"/>
-		<COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="terms" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="discount" NULLABLE="true" TYPE="id_Float"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="return_uri" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="10" NAME="send_snail_mail" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="10" NAME="send_email" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="folder" NULLABLE="true" TYPE="id_String"/>
 	</TABLE>
-      <TABLE IF="MODULENAME=='RecurringLines'">
-		<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="line_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
+      <TABLE IF="(MODULENAME=='RecurringLines') and (ACTION=='add')">
+		<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="20" NAME="unit_cost" NULLABLE="true" TYPE="id_Float"/>
 		<COLUMN KEY="false" LENGTH="20" NAME="quantity" NULLABLE="true" TYPE="id_Float"/>
@@ -424,39 +406,111 @@
 		<COLUMN KEY="false" LENGTH="100" NAME="tax2_name" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="20" NAME="tax1_percent" NULLABLE="true" TYPE="id_Float"/>
 		<COLUMN KEY="false" LENGTH="20" NAME="tax2_percent" NULLABLE="true" TYPE="id_Float"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="compound_tax" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="compound_tax" NULLABLE="false" TYPE="id_Integer"/>
 		<COLUMN KEY="false" LENGTH="30" NAME="type" NULLABLE="true" TYPE="id_String"/>		
+	</TABLE>	
+      <TABLE IF="(MODULENAME=='RecurringLines') and (ACTION=='update')">
+		<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="line_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="unit_cost" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="quantity" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="amount" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="tax1_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="tax2_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="tax1_percent" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="tax2_percent" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="compound_tax" NULLABLE="false" TYPE="id_Integer"/>
+		<COLUMN KEY="false" LENGTH="30" NAME="type" NULLABLE="true" TYPE="id_String"/>		
+	</TABLE>	
+      <TABLE IF="(MODULENAME=='RecurringLines') and (ACTION=='delete')">
+		<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="true" LENGTH="100" NAME="line_id" NULLABLE="false" TYPE="id_String"/>
+	</TABLE>		
+      <TABLE IF="(MODULENAME=='Recurring') and (ACTION=='create')">
+		<COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="po_number" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="discount" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="occurrences" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="frequency" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="10" NAME="send_email" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="10" NAME="send_snail_mail" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="language" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="terms" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="first_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="last_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="organization" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_street1" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_street2" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_city" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_state" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_country" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="p_code" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="vat_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="vat_number" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="return_uri" NULLABLE="true" TYPE="id_String"/>
 	</TABLE>
-      <TABLE IF="MODULENAME=='RecurringContacts'">
+      <TABLE IF="(MODULENAME=='Recurring') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="po_number" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="discount" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="occurrences" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="frequency" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="10" NAME="send_email" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="10" NAME="send_snail_mail" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="language" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="terms" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="first_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="last_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="organization" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_street1" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_street2" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_city" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_state" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="p_country" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="p_code" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="vat_name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="vat_number" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="return_uri" NULLABLE="true" TYPE="id_String"/>
+	</TABLE>
+      <TABLE IF="(MODULENAME=='Recurring') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="false" TYPE="id_String"/>
+	</TABLE>
+      <TABLE IF="(MODULENAME=='RecurringContacts') and (ACTION=='update')">
 		<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="contact_id" NULLABLE="true" TYPE="id_String"/>
 	</TABLE>
-      <TABLE IF="MODULENAME=='Projects'">
-		<COLUMN KEY="false" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
+      <TABLE IF="(MODULENAME=='Projects') and (ACTION=='create')">
 		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
 		<COLUMN KEY="false" LENGTH="50" NAME="bill_method" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="project_manager_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="external" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="hour_budget" NULLABLE="true" TYPE="id_Float"/>
 	</TABLE>
-      <TABLE IF="MODULENAME=='ProjectTasks'">
+    <TABLE IF="(MODULENAME=='Projects') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="50" NAME="bill_method" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
+		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="false" LENGTH="20" NAME="hour_budget" NULLABLE="true" TYPE="id_Float"/>
+	</TABLE>
+    <TABLE IF="(MODULENAME=='Projects') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="false" TYPE="id_String"/>
+	</TABLE>
+      <TABLE IF="(MODULENAME=='ProjectTasks') and (ACTION=='update')">
 		<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="task_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_String"/>
-	</TABLE>
-    <TABLE IF="MODULENAME=='ProjectStaff'">
-		<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="staff_id" NULLABLE="true" TYPE="id_String"/>
-	</TABLE>
-    <TABLE IF="MODULENAME=='ProjectContractors'">
-		<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="contractor_id" NULLABLE="true" TYPE="id_String"/>
-	</TABLE>
-    <TABLE IF="MODULENAME=='ProjectBudget'">
-		<COLUMN KEY="true" LENGTH="100" NAME="project_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="hours" NULLABLE="true" TYPE="id_String"/>
 	</TABLE>
       <TABLE IF="MODULENAME=='Staff'">
 		<COLUMN KEY="false" LENGTH="100" NAME="username" NULLABLE="true" TYPE="id_String"/>
@@ -579,55 +633,33 @@
 		<COLUMN KEY="false" LENGTH="100" NAME="phone1" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="phone2" NULLABLE="true" TYPE="id_String"/>
 	</TABLE>
-    <TABLE IF="MODULENAME=='ClientLinks'">
-		<COLUMN KEY="true" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="client_view" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="view" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="statement" NULLABLE="true" TYPE="id_String"/>
+     <TABLE IF="(MODULENAME=='Receipts') and (ACTION=='create')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="expense_id" NULLABLE="false" TYPE="id_String"/>
+      	<COLUMN KEY="false" LENGTH="500" NAME="image" NULLABLE="false" TYPE="id_String"/>
 	</TABLE>
-    <TABLE IF="MODULENAME=='ClientNotifications'">
-		<COLUMN KEY="true" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="10" NAME="late_payment_reminders" NULLABLE="true" TYPE="id_String"/>
+     <TABLE IF="(MODULENAME=='Receipts') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="expense_id" NULLABLE="false" TYPE="id_String"/>
+      	<COLUMN KEY="false" LENGTH="500" NAME="image" NULLABLE="false" TYPE="id_String"/>
 	</TABLE>
-    <TABLE IF="MODULENAME=='ClientCredits'">
-		<COLUMN KEY="true" LENGTH="100" NAME="client_id" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="credit" NULLABLE="true" TYPE="id_Float"/>		
+     <TABLE IF="(MODULENAME=='Receipts') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="expense_id" NULLABLE="false" TYPE="id_String"/>
 	</TABLE>
-    <TABLE IF="MODULENAME=='System'">
-		<COLUMN KEY="false" LENGTH="100" NAME="company_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="profession" NULLABLE="true" TYPE="id_String"/>		
-		<COLUMN KEY="false" LENGTH="20" NAME="currency_code" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="10" NAME="days_left" NULLABLE="true" TYPE="id_Integer"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="time_entry_format" NULLABLE="true" TYPE="id_String"/>
-	</TABLE>
-    <TABLE IF="MODULENAME=='SystemAddress'">
-		<COLUMN KEY="true" LENGTH="100" NAME="company_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="street1" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="street2" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="city" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="province" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="50" NAME="postal_code" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="country" NULLABLE="true" TYPE="id_String"/>		
-	</TABLE>
-    <TABLE IF="MODULENAME=='SystemApi'">
-		<COLUMN KEY="true" LENGTH="100" NAME="company_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="requests" NULLABLE="true" TYPE="id_Integer"/>
-		<COLUMN KEY="false" LENGTH="20" NAME="request_limit" NULLABLE="true" TYPE="id_Integer"/>
-	</TABLE>
-    <TABLE IF="MODULENAME=='SystemDescription'">
-		<COLUMN KEY="true" LENGTH="100" NAME="company_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="project_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="task_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="team_member" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="30" NAME="entry_date" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="500" NAME="notes" NULLABLE="true" TYPE="id_String"/>
-	</TABLE>
-    <TABLE IF="MODULENAME=='SystemNotifications'">
-		<COLUMN KEY="true" LENGTH="100" NAME="company_name" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="late_payment_reminder_1" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="late_payment_reminder_2" NULLABLE="true" TYPE="id_String"/>
-		<COLUMN KEY="false" LENGTH="100" NAME="late_payment_reminder_3" NULLABLE="true" TYPE="id_String"/>
-	</TABLE>
+      <TABLE IF="(MODULENAME=='Taxes') and (ACTION=='create')">
+         <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
+         <COLUMN KEY="false" LENGTH="30" NAME="number" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="1" NAME="compound" NULLABLE="true" TYPE="id_Integer"/>
+      </TABLE>	
+      <TABLE IF="(MODULENAME=='Taxes') and (ACTION=='update')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="tax_id" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="20" NAME="rate" NULLABLE="true" TYPE="id_Float"/>
+         <COLUMN KEY="false" LENGTH="30" NAME="number" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="1" NAME="compound" NULLABLE="true" TYPE="id_Integer"/>
+      </TABLE>	
+      <TABLE IF="(MODULENAME=='Taxes') and (ACTION=='delete')">
+      	<COLUMN KEY="true" LENGTH="100" NAME="tax_id" NULLABLE="false" TYPE="id_String"/>
+      </TABLE>	
 	</PARAMETER>
   	<PARAMETER NAME="DIE_ON_ERROR" FIELD="CHECK" NUM_ROW="100" REQUIRED="true">
 		<DEFAULT>true</DEFAULT>

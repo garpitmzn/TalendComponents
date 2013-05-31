@@ -31,15 +31,13 @@ if (modulenameallNode.indexOf(":") ==  modulenameallNode.lastIndexOf(":")) {
 }else {
 	xmlFirstChildNode = modulenameallNode.substring(modulenameallNode.indexOf(":")+1,modulenameallNode.lastIndexOf(":"));
 	xmlLastChildNode = modulenameallNode.substring(modulenameallNode.lastIndexOf(":")+1);
-	bprocessChildNode = true;
+	bprocessChildNode = true; //3rd level child
 }
-
+boolean dieOnError = ("true").equals(ElementParameterParser.getValue(node,"__DIE_ON_ERROR__"));
 %>
 String inputxml_<%=cid %> = "";
 String inputxml_key_col_<%=cid %> = "";
 String inputxml_nonkey_col_<%=cid %> = "";
-//inputxml_key_col_<%=cid %>.append("");
-//inputxml_nonkey_col_<%=cid %>.append("");
 String response_error_msg_<%=cid%> = "";
 String response_error_code_<%=cid%> = "";
 org.apache.http.entity.StringEntity xml_<%=cid %>; 
@@ -136,11 +134,10 @@ inputxml_<%=cid %> += "</request>";
 	request_<%=cid %>.addHeader( "User-Agent", "FreshBooks-tFreshbooksInput" );
 	request_<%=cid %>.removeHeaders( "Content-Length" );
 	request_<%=cid %>.setEntity( xml_<%=cid %> );
-	System.out.println("Requesting xml is "+inputxml_<%=cid %>);
+	//System.out.println("Requesting xml is "+inputxml_<%=cid %>);
 	globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);	
 	/* Make api() call to freshbooks */
  	client_<%=cid %> = new org.apache.http.impl.client.DefaultHttpClient();
-	System.out.println("Executing request");
  	response_<%=cid %> = client_<%=cid %>.execute(request_<%=cid %>);
  	in_<%=cid %> = response_<%=cid %>.getEntity().getContent();
 	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -156,13 +153,38 @@ inputxml_<%=cid %> += "</request>";
 	}//responseok
 	else
 	{
-		System.err.println(new Date()+ "-Error message is : " + eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent());
-		System.err.println(new Date()+ "-Error code is : " + eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent());
-		throw new RuntimeException("response from freshbook api() contains error");
+		response_error_msg_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent();
+		response_error_code_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent();
+		System.err.println(new Date()+ "-ERROR: Error message is : " + response_error_msg_<%=cid%>);
+		System.err.println(new Date()+ "-ERROR: Error code is : " + response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);			 	
+		<%
+			    if ( dieOnError ) {
+		%>
+			throw new RuntimeException(new Date()+ "-ERROR - freshbook api() returned error in response");
+		<%
+			}//dieonerror
+		%>
 	}
 }//doc_if_null
 else
 {
-	System.err.println(new Date()+ "-Error message is : " + eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent());
-	throw new RuntimeException("response from freshbook api() contains error");	
+		response_error_msg_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent();
+		response_error_code_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent();
+		System.err.println(new Date()+ "-ERROR: Error message is : " + response_error_msg_<%=cid%>);
+		System.err.println(new Date()+ "-ERROR: Error code is : " + response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);			 	
+		<%
+			    if ( dieOnError ) {
+		%>
+			throw new RuntimeException(new Date()+ "-ERROR - freshbook api() returned error in response");
+		<%
+			}//dieonerror
+		%>
 }//doc_if_null

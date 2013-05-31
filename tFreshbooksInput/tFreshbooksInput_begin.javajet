@@ -24,6 +24,12 @@ String cid = node.getUniqueName();
 String fbs_authtoken = ElementParameterParser.getValue(node, "__FRESHBOOKSAUTHTOKEN__");
 String condition = ElementParameterParser.getValue(node, "__CONDITION__");
 Boolean bprocessChild = false;
+String date_from = ElementParameterParser.getValue(node, "__DATE_FROM__");
+String date_to = ElementParameterParser.getValue(node, "__DATE_TO__");
+String updated_from = ElementParameterParser.getValue(node, "__UPDATED_FROM__");
+String updated_to = ElementParameterParser.getValue(node, "__UPDATED_TO__");
+String page_filter = ElementParameterParser.getValue(node, "__SPECIFIC_PAGE_FILTER__");
+String page_result_filter = ElementParameterParser.getValue(node, "__PER_PAGE_RESULT_LIMIT__");
 String modulelabel;
 String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
 String post_method = ElementParameterParser.getValue(node, "__POST_METHOD__");
@@ -83,7 +89,12 @@ while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
 			inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.list\">";
 		}//2
 		else{
-			inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.get\">";
+			if ("<%=post_method %>".equals("Get")) {//2b
+				inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.get\">";
+			}//2b
+			if ("<%=post_method %>".equals("Current")) {//2c
+				inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.current\">";
+			}//2c			
 		}//2
 	}else{
 		if ("<%=post_method %>".equals("List")) {//2a
@@ -98,9 +109,35 @@ while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
 		}//2a			
 	}
 	if ("<%=post_method %>".equals("List")) {
-		inputxml_<%=cid %>  = inputxml_<%=cid %> + "<page>"+iCurrentPage_<%=cid %>.toString()+"</page>";
+		inputxml_<%=cid %>  += "<page>"+iCurrentPage_<%=cid %>.toString()+"</page>";
 	}	
-	inputxml_<%=cid %>  = inputxml_<%=cid %> + strfilterCondition_<%=cid %> + "</request>";
+	if ( !"<%=page_result_filter%>".equals("") && !"<%=page_result_filter%>".equals("null") 
+		&& "<%=post_method %>".equals("List")
+	) {
+		inputxml_<%=cid %>  += "<per_page>"+"<%=page_result_filter%>"+"</per_page>";
+	}
+	if ( !"<%=date_from%>".equals("") && !"<%=date_from%>".equals("null")
+		&& !"<%=date_from%>".equals("YYYY-MM-DD")
+	) {
+		inputxml_<%=cid %>  += "<date_from>"+"<%=date_from%>"+"</date_from>";
+	}
+	if ( !"<%=date_to%>".equals("") && !"<%=date_to%>".equals("null")
+		&& !"<%=date_to%>".equals("YYYY-MM-DD")
+	) {
+		inputxml_<%=cid %>  += "<date_to>"+"<%=date_to%>"+"</date_to>";
+	}
+	if ( !"<%=updated_from%>".equals("") && !"<%=updated_from%>".equals("null")
+		&& !"<%=updated_from%>".equals("YYYY-MM-DD HH:MI:SS")
+	) {
+		inputxml_<%=cid %>  += "<updated_from>"+"<%=updated_from%>"+"</updated_from>";
+	}
+	if ( !"<%=updated_to%>".equals("") && !"<%=updated_to%>".equals("null")
+		&& !"<%=updated_to%>".equals("YYYY-MM-DD HH:MI:SS")
+	) {
+		inputxml_<%=cid %>  += "<updated_to>"+"<%=updated_to%>"+"</updated_to>";
+	}
+	
+	inputxml_<%=cid %>  +=  strfilterCondition_<%=cid %> + "</request>";
 	xml_<%=cid %> = new org.apache.http.entity.StringEntity(inputxml_<%=cid %>, "UTF-8");
  	request_<%=cid %>= new org.apache.http.client.methods.HttpPost( <%=fbs_apiurl%> );
 	request_<%=cid %>.addHeader( "Authorization", "Basic "+fbs_authtoken_encoded_<%=cid %>); // Pass in the OAuth parameters you built up
@@ -111,7 +148,6 @@ while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
 	System.out.println("Requesting xml is "+inputxml_<%=cid %>);
 	/* Make api() call to freshbooks */
  	client_<%=cid %> = new org.apache.http.impl.client.DefaultHttpClient();
-	System.out.println("Executing request");
  	response_<%=cid %> = client_<%=cid %>.execute(request_<%=cid %>);
  	in_<%=cid %> = response_<%=cid %>.getEntity().getContent();
 	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -125,23 +161,19 @@ while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
 	    if (sResponseReceived_<%=cid %>.toLowerCase().equals("ok")) {//responseok
     	if ("<%=post_method %>".equals("List")) {//postmethodlist
    		   	nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulelabel%>");
-    		System.out.println(nList_<%=cid %>.getLength());
     		nNode_<%=cid %> = nList_<%=cid %>.item(0);
-    		eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
-   	
-			//System.out.println("page : " + eElement_<%=cid %>.getAttribute("page"));
-			//iCurrentPage = Integer.parseInt(eElement.getAttribute("page"));
-			//System.out.println("pages : " + eElement_<%=cid %>.getAttribute("pages"));
+    		eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;  	
 			if (iFirstParseDoneFlag_<%=cid %> == 0){
-				iTotalPage_<%=cid %> = Integer.parseInt(eElement_<%=cid %>.getAttribute("pages"));
-				iFirstParseDoneFlag_<%=cid %> = 1;
+				if ( !"<%=page_filter%>".equals("") && !"<%=page_filter%>".equals("null")) {
+					iTotalPage_<%=cid %> = Integer.parseInt("<%=page_filter%>");
+					iFirstParseDoneFlag_<%=cid %> = 1;				
+				}else{
+					iTotalPage_<%=cid %> = Integer.parseInt(eElement_<%=cid %>.getAttribute("pages"));
+					iFirstParseDoneFlag_<%=cid %> = 1;
+				}
 			}
-			//System.out.println("totalpage is "+iTotalPage_<%=cid %>.toString());
-			//System.out.println("total : " + eElement_<%=cid %>.getAttribute("total"));
 		}//postmethodlist
     	nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
-    	//System.out.println(nList_<%=cid %>.getLength());
-    	//System.out.println("total rows returned "+nList_<%=cid %>.getLength());
     	for (int i_<%=cid %> = 0; i_<%=cid %> < nList_<%=cid %>.getLength(); i_<%=cid %>++) {//parentfor
 			nNode_<%=cid %> = nList_<%=cid %>.item(i_<%=cid %>);
  			if (nNode_<%=cid %>.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {//doc3

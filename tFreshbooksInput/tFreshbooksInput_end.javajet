@@ -42,15 +42,17 @@ iCurrentPage_<%=cid %>++;
 		}//responseok
 		else{   	
 			iTotalPage_<%=cid %> = -1;
-			System.err.println(new Date()+ "-Error message is : " + eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent());
-			System.err.println(new Date()+ "-Error code is : " + eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent());
+			response_error_msg_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent();
+			response_error_code_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent();
+			System.err.println(new Date()+ "-ERROR: Error message is : " + response_error_msg_<%=cid%>);
+			System.err.println(new Date()+ "-ERROR: Error code is : " + response_error_code_<%=cid%>);
 			<%
 			    if ( dieOnError ) {
 			 %>
 				globalMap.put("<%=cid %>_XML_REQUEST",inputxml_<%=cid %>);
 				globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
 				globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);			 	
-				throw new RuntimeException("response from freshbook api() contains error");
+				throw new RuntimeException(new Date()+ "-ERROR - freshbook api() returned error in response");
 			<%
 				}
 			%>	
