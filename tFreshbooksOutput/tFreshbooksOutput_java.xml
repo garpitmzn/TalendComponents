@@ -17,8 +17,7 @@
   </HEADER>
 
   <FAMILIES>
-  <!--  <FAMILY>Business/Freshbooks</FAMILY>-->
-	<FAMILY>Cloud/Freshbooks</FAMILY>
+  <FAMILY>Business/Freshbooks</FAMILY>
   </FAMILIES>
 
   <DOCUMENTATION>

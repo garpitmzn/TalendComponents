@@ -46,6 +46,15 @@ if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
 String ColumnFilterString = "";
 List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
 int size_filter_input_list = filter_input_list.size();
+/*
+Logic is that we use : separator in modulename to identify child nodes and parent nodes
+bprocesschild is used to identify whether we need to process lowest level child
+challenge is building the child level xml - as freshbooks expect a specific pattern.
+also response from freshbooks will contain number of pages the request returned 
+and if user has specified page filter we restrict pages to that page filter number
+and we continue to keep sending request to freshbooks unless we have received all 
+pages.
+*/
 %>
 int nb_line_<%=cid %> = 0;
 String fbs_authtoken_<%=cid %> = <%=fbs_authtoken%>+":X";
@@ -145,7 +154,6 @@ while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
 	request_<%=cid %>.addHeader( "User-Agent", "FreshBooks-tFreshbooksInput" );
 	request_<%=cid %>.removeHeaders( "Content-Length" );
 	request_<%=cid %>.setEntity( xml_<%=cid %> );
-	System.out.println("Requesting xml is "+inputxml_<%=cid %>);
 	/* Make api() call to freshbooks */
  	client_<%=cid %> = new org.apache.http.impl.client.DefaultHttpClient();
  	response_<%=cid %> = client_<%=cid %>.execute(request_<%=cid %>);

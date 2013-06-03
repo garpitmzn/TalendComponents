@@ -24,6 +24,10 @@ String modulelabel;
 String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
 String action = ElementParameterParser.getValue(node, "__ACTION__");
 String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+/*
+Logic is to build xml for request - using : as separator for xml tags formation
+in modulename. using this we identify whether child node has to be built.
+*/
 %>
 Integer nb_line_<%=cid %> = 0;
 String fbs_authtoken_<%=cid %> = <%=fbs_authtoken%>+":X";
