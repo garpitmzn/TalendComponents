@@ -1,98 +1,101 @@
 <%@ jet
-imports="
-org.talend.core.model.process.INode
-org.talend.core.model.process.ElementParameterParser
-org.talend.core.model.metadata.IMetadataTable
-org.talend.core.model.metadata.IMetadataColumn
-org.talend.core.model.process.IConnection
-org.talend.core.model.process.IConnectionCategory
-org.talend.designer.codegen.config.CodeGeneratorArgument
-org.talend.core.model.process.EConnectionType
-org.talend.core.model.metadata.types.JavaTypesManager
-org.talend.core.model.metadata.types.JavaType
-java.util.List
-java.util.HashMap
-java.util.Map
-java.util.ArrayList
-
-"
+	imports="
+	org.talend.core.model.process.INode
+	org.talend.core.model.process.ElementParameterParser
+	org.talend.core.model.metadata.IMetadataTable
+	org.talend.core.model.metadata.IMetadataColumn
+	org.talend.core.model.process.IConnection
+	org.talend.core.model.process.IConnectionCategory
+	org.talend.designer.codegen.config.CodeGeneratorArgument
+	org.talend.core.model.process.EConnectionType
+	org.talend.core.model.metadata.types.JavaTypesManager
+	org.talend.core.model.metadata.types.JavaType
+	java.util.List
+	java.util.HashMap
+	java.util.Map
+	java.util.ArrayList
+	"
 %>
 <%
-CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
-INode node = (INode)codeGenArgument.getArgument();
-String cid = node.getUniqueName();
-String fbs_authtoken = ElementParameterParser.getValue(node, "__FRESHBOOKSAUTHTOKEN__");
-String condition = ElementParameterParser.getValue(node, "__CONDITION__");
-Boolean bprocessChild = false;
-String date_from = ElementParameterParser.getValue(node, "__DATE_FROM__");
-String date_to = ElementParameterParser.getValue(node, "__DATE_TO__");
-String updated_from = ElementParameterParser.getValue(node, "__UPDATED_FROM__");
-String updated_to = ElementParameterParser.getValue(node, "__UPDATED_TO__");
-String page_filter = ElementParameterParser.getValue(node, "__SPECIFIC_PAGE_FILTER__");
-String page_result_filter = ElementParameterParser.getValue(node, "__PER_PAGE_RESULT_LIMIT__");
-String modulelabel;
-String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
-String post_method = ElementParameterParser.getValue(node, "__POST_METHOD__");
-String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
-String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
-String modulelabelchild = "";
-if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
-	modulelabel = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
-}else {
-	modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));
-	modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);
-	bprocessChild = true;
-}
-String ColumnFilterString = "";
-List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
-int size_filter_input_list = filter_input_list.size();
-/*
-Logic is that we use : separator in modulename to identify child nodes and parent nodes
-bprocesschild is used to identify whether we need to process lowest level child
-challenge is building the child level xml - as freshbooks expect a specific pattern.
-also response from freshbooks will contain number of pages the request returned 
-and if user has specified page filter we restrict pages to that page filter number
-and we continue to keep sending request to freshbooks unless we have received all 
-pages.
-*/
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode)codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	String fbs_authtoken = ElementParameterParser.getValue(node, "__FRESHBOOKSAUTHTOKEN__");
+	String condition = ElementParameterParser.getValue(node, "__CONDITION__");
+	Boolean bprocessChild = false;
+	String date_from = ElementParameterParser.getValue(node, "__DATE_FROM__");
+	String date_to = ElementParameterParser.getValue(node, "__DATE_TO__");
+	String updated_from = ElementParameterParser.getValue(node, "__UPDATED_FROM__");
+	String updated_to = ElementParameterParser.getValue(node, "__UPDATED_TO__");
+	String page_filter = ElementParameterParser.getValue(node, "__SPECIFIC_PAGE_FILTER__");
+	String page_result_filter = ElementParameterParser.getValue(node, "__PER_PAGE_RESULT_LIMIT__");
+	String modulelabel;
+	String fbs_apiurl = ElementParameterParser.getValue(node, "__FRESHBOOKSAPIURL__");
+	String post_method = ElementParameterParser.getValue(node, "__POST_METHOD__");
+	String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+	String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+	String modulelabelchild = "";
+	if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
+		modulelabel = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
+	}else {
+		modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));
+		modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);
+		bprocessChild = true;
+	}
+	String ColumnFilterString = "";
+	List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
+	int size_filter_input_list = filter_input_list.size();
+	/*
+	Logic is that we use : separator in modulename to identify child nodes and parent nodes
+	bprocesschild is used to identify whether we need to process lowest level child
+	challenge is building the child level xml - as freshbooks expect a specific pattern.
+	also response from freshbooks will contain number of pages the request returned 
+	and if user has specified page filter we restrict pages to that page filter number
+	and we continue to keep sending request to freshbooks unless we have received all 
+	pages.
+	*/
 %>
-int nb_line_<%=cid %> = 0;
-String fbs_authtoken_<%=cid %> = <%=fbs_authtoken%>+":X";
-String fbs_authtoken_encoded_<%=cid %> = new String(org.apache.commons.codec.binary.Base64.encodeBase64(fbs_authtoken_<%=cid %>.getBytes()));
-String inputxml_<%=cid %> = "";
-String strfilterCondition_<%=cid %>="";
-String response_error_msg_<%=cid%> = "";
-String response_error_code_<%=cid%> = "";
+	int nb_line_<%=cid %> = 0;
+	String fbs_authtoken_<%=cid %> = <%=fbs_authtoken%>+":X";
+	String fbs_authtoken_encoded_<%=cid %> = new String(org.apache.commons.codec.binary.Base64.encodeBase64(fbs_authtoken_<%=cid %>.getBytes()));
+	String inputxml_<%=cid %> = "";
+	String strfilterCondition_<%=cid %>="";
+	String response_error_msg_<%=cid%> = "";
+	String response_error_code_<%=cid%> = "";
 <%
-for(int g = 0; g < size_filter_input_list; g++){ //for-size_filter_input
-	Map<String, String> filter_input_listmap = filter_input_list.get(g);
-	String inputColumn = filter_input_listmap.get("FILTER_COLUMN");
-	String inputValue = filter_input_listmap.get("FILTER_VALUE");
+	for(int g = 0; g < size_filter_input_list; g++){ //for-size_filter_input
+		Map<String, String> filter_input_listmap = filter_input_list.get(g);
+		String inputColumn = filter_input_listmap.get("FILTER_COLUMN");
+		String inputValue = filter_input_listmap.get("FILTER_VALUE");
 %>
 	strfilterCondition_<%=cid %> = strfilterCondition_<%=cid %> + "<<%=inputColumn%>>";
 	strfilterCondition_<%=cid %> = strfilterCondition_<%=cid %> + <%=inputValue%>+"</<%=inputColumn%>>";
 <%	
-}//for-size_filter_input
+	}//for-size_filter_input
 %>
-org.apache.http.entity.StringEntity xml_<%=cid %>; 
-org.apache.http.impl.client.DefaultHttpClient client_<%=cid %>;
-org.apache.http.client.methods.HttpPost request_<%=cid %>;
-org.apache.http.HttpResponse response_<%=cid %>;
-Integer iTotalPage_<%=cid %> = 1;
-Integer iCurrentPage_<%=cid %> = 1;
-Integer iFirstParseDoneFlag_<%=cid %> = 0;
-java.io.InputStream in_<%=cid %>;
-org.w3c.dom.Document doc_<%=cid %>;
-String sResponseReceived_<%=cid %> = "";
-javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
-org.w3c.dom.NodeList nList_schemacol_<%=cid %>;
-org.w3c.dom.NodeList nList_schemacol_child_<%=cid %>;
-org.w3c.dom.Node nNode_child_<%=cid %>;
-org.w3c.dom.Element eElement_child_<%=cid %>;
-org.w3c.dom.NodeList nList_child_<%=cid %>;
+	org.apache.http.entity.StringEntity xml_<%=cid %>; 
+	org.apache.http.impl.client.DefaultHttpClient client_<%=cid %>;
+	org.apache.http.client.methods.HttpPost request_<%=cid %>;
+	org.apache.http.HttpResponse response_<%=cid %>;
+	Integer iTotalPage_<%=cid %> = 1;
+	Integer iCurrentPage_<%=cid %> = 1;
+	Integer iFirstParseDoneFlag_<%=cid %> = 0;
+	java.io.InputStream in_<%=cid %>;
+	org.w3c.dom.Document doc_<%=cid %>;
+	String sResponseReceived_<%=cid %> = "";
+	javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+	org.w3c.dom.NodeList nList_schemacol_<%=cid %>;
+	org.w3c.dom.NodeList nList_schemacol_child_<%=cid %>;
+	org.w3c.dom.Node nNode_child_<%=cid %>;
+	org.w3c.dom.Element eElement_child_<%=cid %>;
+	org.w3c.dom.NodeList nList_child_<%=cid %>;
+	if ( !"<%=page_filter%>".equals("") && !"<%=page_filter%>".equals("null")) {
+					iTotalPage_<%=cid %> = Integer.parseInt("<%=page_filter%>");
+					iCurrentPage_<%=cid %> = Integer.parseInt("<%=page_filter%>");
+	}
 
-/*We keep fetching till we get all pages */
-while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
+	/*We keep fetching till we get all pages */
+	while (iCurrentPage_<%=cid %> <= iTotalPage_<%=cid %>) { //while page
 	if ("<%=modulename %>".equals("member")) {
 		if ("<%=post_method %>".equals("List")) {//2
 			inputxml_<%=cid %> = "<?xml version='1.0' encoding='utf-8' ?><request method=\"staff.list\">";
