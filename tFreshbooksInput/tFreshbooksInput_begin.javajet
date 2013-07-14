@@ -89,9 +89,9 @@
 	org.w3c.dom.Node nNode_child_<%=cid %>;
 	org.w3c.dom.Element eElement_child_<%=cid %>;
 	org.w3c.dom.NodeList nList_child_<%=cid %>;
-	if ( !"<%=page_filter%>".equals("") && !"<%=page_filter%>".equals("null")) {
-					iTotalPage_<%=cid %> = Integer.parseInt("<%=page_filter%>");
-					iCurrentPage_<%=cid %> = Integer.parseInt("<%=page_filter%>");
+	if ( !<%=page_filter%>.equals("") && !<%=page_filter%>.equals("null")) {
+					iTotalPage_<%=cid %> = Integer.parseInt(<%=page_filter%>);
+					iCurrentPage_<%=cid %> = Integer.parseInt(<%=page_filter%>);
 	}
 
 	/*We keep fetching till we get all pages */
@@ -123,30 +123,30 @@
 	if ("<%=post_method %>".equals("List")) {
 		inputxml_<%=cid %>  += "<page>"+iCurrentPage_<%=cid %>.toString()+"</page>";
 	}	
-	if ( !"<%=page_result_filter%>".equals("") && !"<%=page_result_filter%>".equals("null") 
+	if ( !<%=page_result_filter%>.equals("") && !<%=page_result_filter%>.equals("null") 
 		&& "<%=post_method %>".equals("List")
 	) {
-		inputxml_<%=cid %>  += "<per_page>"+"<%=page_result_filter%>"+"</per_page>";
+		inputxml_<%=cid %>  += "<per_page>"+<%=page_result_filter%>+"</per_page>";
 	}
-	if ( !"<%=date_from%>".equals("") && !"<%=date_from%>".equals("null")
-		&& !"<%=date_from%>".equals("YYYY-MM-DD")
+	if ( !<%=date_from%>.equals("") && !<%=date_from%>.equals("null")
+		&& !<%=date_from%>.equals("YYYY-MM-DD")
 	) {
-		inputxml_<%=cid %>  += "<date_from>"+"<%=date_from%>"+"</date_from>";
+		inputxml_<%=cid %>  += "<date_from>"+<%=date_from%>+"</date_from>";
 	}
-	if ( !"<%=date_to%>".equals("") && !"<%=date_to%>".equals("null")
-		&& !"<%=date_to%>".equals("YYYY-MM-DD")
+	if ( !<%=date_to%>.equals("") && !<%=date_to%>.equals("null")
+		&& !<%=date_to%>.equals("YYYY-MM-DD")
 	) {
-		inputxml_<%=cid %>  += "<date_to>"+"<%=date_to%>"+"</date_to>";
+		inputxml_<%=cid %>  += "<date_to>"+<%=date_to%>+"</date_to>";
 	}
-	if ( !"<%=updated_from%>".equals("") && !"<%=updated_from%>".equals("null")
-		&& !"<%=updated_from%>".equals("YYYY-MM-DD HH:MI:SS")
+	if ( !<%=updated_from%>.equals("") && !<%=updated_from%>.equals("null")
+		&& !<%=updated_from%>.equals("YYYY-MM-DD HH:MI:SS")
 	) {
-		inputxml_<%=cid %>  += "<updated_from>"+"<%=updated_from%>"+"</updated_from>";
+		inputxml_<%=cid %>  += "<updated_from>"+<%=updated_from%>+"</updated_from>";
 	}
-	if ( !"<%=updated_to%>".equals("") && !"<%=updated_to%>".equals("null")
-		&& !"<%=updated_to%>".equals("YYYY-MM-DD HH:MI:SS")
+	if ( !<%=updated_to%>.equals("") && !<%=updated_to%>.equals("null")
+		&& !<%=updated_to%>.equals("YYYY-MM-DD HH:MI:SS")
 	) {
-		inputxml_<%=cid %>  += "<updated_to>"+"<%=updated_to%>"+"</updated_to>";
+		inputxml_<%=cid %>  += "<updated_to>"+<%=updated_to%>+"</updated_to>";
 	}
 	
 	inputxml_<%=cid %>  +=  strfilterCondition_<%=cid %> + "</request>";
@@ -175,8 +175,8 @@
     		nNode_<%=cid %> = nList_<%=cid %>.item(0);
     		eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;  	
 			if (iFirstParseDoneFlag_<%=cid %> == 0){
-				if ( !"<%=page_filter%>".equals("") && !"<%=page_filter%>".equals("null")) {
-					iTotalPage_<%=cid %> = Integer.parseInt("<%=page_filter%>");
+				if ( !<%=page_filter%>.equals("") && !<%=page_filter%>.equals("null")) {
+					iTotalPage_<%=cid %> = Integer.parseInt(<%=page_filter%>);
 					iFirstParseDoneFlag_<%=cid %> = 1;				
 				}else{
 					iTotalPage_<%=cid %> = Integer.parseInt(eElement_<%=cid %>.getAttribute("pages"));
