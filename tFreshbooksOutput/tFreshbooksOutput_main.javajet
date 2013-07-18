@@ -150,6 +150,16 @@
 		if (sResponseReceived_<%=cid %>.toLowerCase().equals("ok")) {//responseok		
 			 
 			nb_line_<%=cid %>++;
+			if ("<%=action %>".equals("create") && !"<%=xmlParentNode %>".equals("receipt")){
+				if (doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>_id").getLength() != 0){
+					globalMap.put("<%=cid %>_FRESHBOOKS_RECORD_ID", doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>_id").item(0).getTextContent());
+				}//getlength
+			}//action
+			if ("<%=action %>".equals("add")){
+				if (doc_<%=cid %>.getElementsByTagName("<%=xmlLastChildNode %>_id").getLength() != 0){
+					globalMap.put("<%=cid %>_FRESHBOOKS_RECORD_ID", doc_<%=cid %>.getElementsByTagName("<%=xmlLastChildNode %>_id").item(0).getTextContent());
+				}//getlength
+			}//action
 	}//responseok
 	else
 	{
