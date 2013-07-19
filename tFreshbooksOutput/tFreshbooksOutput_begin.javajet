@@ -33,3 +33,7 @@
 	String fbs_authtoken_<%=cid %> = <%=fbs_authtoken%>+":X";
 	String fbs_authtoken_encoded_<%=cid %> = new String(org.apache.commons.codec.binary.Base64.encodeBase64(
 		fbs_authtoken_<%=cid %>.getBytes()));
+	globalMap.put("<%=cid %>_XML_REQUEST", "");
+	globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG","");
+	globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE","");
+		
