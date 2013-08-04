@@ -253,6 +253,8 @@
 	</TABLE>
       <TABLE IF="MODULENAME=='InvoiceLines'">
 		<COLUMN KEY="true" LENGTH="100" NAME="invoice_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="true" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="true" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>		
 		<COLUMN KEY="false" LENGTH="100" NAME="line_id" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
@@ -313,6 +315,8 @@
 	</TABLE>
       <TABLE IF="MODULENAME=='RecurringLines'">
 		<COLUMN KEY="true" LENGTH="100" NAME="recurring_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="true" LENGTH="30" NAME="date" NULLABLE="true" TYPE="id_String"/>
+		<COLUMN KEY="true" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>		
 		<COLUMN KEY="false" LENGTH="100" NAME="line_id" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="255" NAME="name" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="500" NAME="description" NULLABLE="true" TYPE="id_String"/>
@@ -444,6 +448,7 @@
 	</TABLE>
     <TABLE IF="MODULENAME=='ClientContacts'">
 		<COLUMN KEY="true" LENGTH="100" NAME="client_id" NULLABLE="false" TYPE="id_String"/>
+		<COLUMN KEY="true" LENGTH="30" NAME="updated" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="contact_id" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="username" NULLABLE="true" TYPE="id_String"/>
 		<COLUMN KEY="false" LENGTH="100" NAME="first_name" NULLABLE="true" TYPE="id_String"/>

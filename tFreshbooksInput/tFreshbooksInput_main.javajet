@@ -26,8 +26,8 @@
 	if (modulenameall.indexOf(":") ==  modulenameall.lastIndexOf(":")) {
 		modulelabel = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
 	}else {
-		modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));
-		modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);
+		modulelabel = modulenameall.substring(modulenameall.indexOf(":")+1,modulenameall.lastIndexOf(":"));//invoices
+		modulelabelchild = modulenameall.substring(modulenameall.lastIndexOf(":")+1);//line
 		bprocessChild = true;
 	} 
 %>
