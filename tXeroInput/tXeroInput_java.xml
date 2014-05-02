@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<COMPONENT>
+
+  <HEADER
+    PLATEFORM="ALL"
+    SERIAL=""
+    VERSION="0.102"
+    STATUS="BETA"
+	DATA_AUTO_PROPAGATE="true"
+    COMPATIBILITY="ALL"
+    AUTHOR="Talend"
+    RELEASE_DATE="20130515A"
+    STARTABLE="true"
+    SCHEMA_AUTO_PROPAGATE="true" 
+  >
+    <SIGNATURE/>
+  </HEADER>
+
+  <FAMILIES>
+  <FAMILY>Business/Xero</FAMILY>
+  </FAMILIES>
+
+  <DOCUMENTATION>
+    <URL/>
+  </DOCUMENTATION>
+
+  <CONNECTORS>
+    <CONNECTOR CTYPE="FLOW" MAX_INPUT="0" MAX_OUTPUT="1"/>
+    <CONNECTOR CTYPE="ITERATE" MAX_OUTPUT="1" MAX_INPUT="1"/>
+    <CONNECTOR CTYPE="SUBJOB_OK" MAX_INPUT="1" />
+    <CONNECTOR CTYPE="SUBJOB_ERROR" MAX_INPUT="1" />
+    <CONNECTOR CTYPE="COMPONENT_OK"/>
+    <CONNECTOR CTYPE="COMPONENT_ERROR"/>
+    <CONNECTOR CTYPE="RUN_IF"/>
+  </CONNECTORS>
+
+  <PARAMETERS>
+    <PARAMETER NAME="XeroAPIURL" FIELD="TEXT" NUM_ROW="10"  REQUIRED="true" >
+      <DEFAULT>"https://api.xero.com/api.xro/2.0"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="Xero_CONSUMER_KEY" FIELD="TEXT" NUM_ROW="20" REQUIRED="true">
+      <DEFAULT>""</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="Xero_CONSUMER_PK_FILE" FIELD="FILE" NUM_ROW="20" REQUIRED="true" REPOSITORY_VALUE="FILE_PATH">
+      <DEFAULT>"__COMP_DEFAULT_FILE_DIR__/xero_privatekey.pcks8"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="MODULENAME" FIELD="CLOSED_LIST" NUM_ROW="30" REQUIRED="true">
+	<ITEMS DEFAULT="Contacts">
+		<ITEM NAME="Contacts"   VALUE="Contact:Contacts" />
+	</ITEMS>
+    </PARAMETER>
+	<PARAMETER NAME="SCHEMA" FIELD="SCHEMA_TYPE"  NUM_ROW="40"  REQUIRED="true" >
+      <TABLE IF="MODULENAME=='Contacts'">
+         <COLUMN KEY="true" LENGTH="100" NAME="ContactID" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="255" NAME="ContactStatus" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="500" NAME="Name" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="FirstName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="LastName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="500" NAME="EmailAddress" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="SkypeUserName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="BankAccountDetails" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="TaxNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="AccountsReceivableTaxType" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="AccountsPayableTaxType" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_AddressLine1" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_AddressLine2" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_AddressLine3" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_AddressLine4" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_City" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_Region" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="Postal_PostalCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_Country" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Postal_AttentionTo" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_AddressLine1" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_AddressLine2" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_AddressLine3" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_AddressLine4" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_City" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_Region" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="Street_PostalCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_Country" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Street_AttentionTo" NULLABLE="true" TYPE="id_String"/>		 
+		 <COLUMN KEY="false" LENGTH="100" NAME="Default_PhoneNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Default_PhoneAreaCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Default_PhoneCountryCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="DirectDial_PhoneNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="DirectDial_PhoneAreaCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="DirectDial_PhoneCountryCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Fax_PhoneNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Fax_PhoneAreaCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Fax_PhoneCountryCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Mobile_PhoneNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Mobile_PhoneAreaCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="Mobile_PhoneCountryCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="UpdatedDateUTC" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="IsSupplier" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="IsCustomer" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="DefaultCurrency" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="Discount" NULLABLE="true" TYPE="id_Float"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Website" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="BatchPayments_BankAccountNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="BatchPayments_BankAccountName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="BatchPayments_Details" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="AccountsReceivable_Outstanding" NULLABLE="true" TYPE="id_Float"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="AccountsReceivable_Overdue" NULLABLE="true" TYPE="id_Float"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="AccountsPayable_Outstanding" NULLABLE="true" TYPE="id_Float"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="AccountsPayable_Overdue" NULLABLE="true" TYPE="id_Float"/>		 
+		 <COLUMN KEY="false" LENGTH="10" NAME="Bills_Day" NULLABLE="true" TYPE="id_String"/>		 
+		 <COLUMN KEY="false" LENGTH="255" NAME="Bills_Type" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="10" NAME="Sales_Day" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="255" NAME="Sales_Type" NULLABLE="true" TYPE="id_String"/>
+	  </TABLE>
+	</PARAMETER>
+	<PARAMETER NAME="FILTER_INPUT" FIELD="TABLE" NUM_ROW="50" NB_LINES="4">
+      <ITEMS>
+        <ITEM NAME="FILTER_COLUMN" FIELD="COLUMN_LIST" />
+        <ITEM NAME="FILTER_VALUE" FIELD="String" VALUE='""' />
+      </ITEMS>
+    </PARAMETER>
+  	<PARAMETER NAME="LAST_MODIFIED_DATE" FIELD="TEXT" NUM_ROW="60" REQUIRED="false">
+		<DEFAULT>"YYYY-MM-DDTHH24:MI:SS"</DEFAULT>
+	</PARAMETER>	
+  	<PARAMETER NAME="SORT_BY" FIELD="TEXT" NUM_ROW="70" REQUIRED="false">
+		<DEFAULT>"UpdatedDateUTC"</DEFAULT>
+	</PARAMETER>	
+  	<PARAMETER NAME="SORT_MODE" FIELD="TEXT" NUM_ROW="70" REQUIRED="false">
+		<DEFAULT>"DESC"</DEFAULT>
+	</PARAMETER>		
+  	<PARAMETER NAME="PAGE_FILTER" FIELD="TEXT" NUM_ROW="80" REQUIRED="false">
+  	<DEFAULT>"1"</DEFAULT>
+	</PARAMETER>
+  	<PARAMETER NAME="INCLUDE_ARCHIVED" FIELD="TEXT" NUM_ROW="80" REQUIRED="false">
+  	<DEFAULT>"false"</DEFAULT>
+	</PARAMETER>
+  	<PARAMETER NAME="DIE_ON_ERROR" FIELD="CHECK" NUM_ROW="90" REQUIRED="true">
+		<DEFAULT>true</DEFAULT>
+	</PARAMETER>	
+ </PARAMETERS>
+ <ADVANCED_PARAMETERS/> 
+  <CODEGENERATION>
+    <IMPORTS>
+	  <IMPORT NAME="httpclient-4.0.1.jar" MODULE="httpclient-4.0.1.jar" REQUIRED="true" />
+	  <IMPORT NAME="httpcore-4.0.1.jar" MODULE="httpcore-4.0.1.jar" REQUIRED="true" />
+	  <IMPORT NAME="commons-codec-1.8.jar" MODULE="commons-codec-1.8.jar" REQUIRED="true" />
+	  <IMPORT NAME="commons-logging-1.1.3.jar" MODULE="commons-logging-1.1.3.jar" REQUIRED="true" />
+	  <IMPORT NAME="oauth-20100601.jar" MODULE="oauth-20100601.jar" REQUIRED="true" />
+	  <IMPORT NAME="oauth-consumer-20100601.jar" MODULE="oauth-consumer-20100601.jar" REQUIRED="true" /> 
+	  <IMPORT NAME="oauth-httpclient4-20100601.jar" MODULE="oauth-httpclient4-20100601.jar" REQUIRED="true" />
+    </IMPORTS>
+  </CODEGENERATION>
+   <RETURNS>
+      <RETURN NAME="NB_LINE" TYPE="id_Integer" AVAILABILITY="AFTER"/>
+      <RETURN NAME="HTTP_REQUEST" TYPE="id_String" AVAILABILITY="AFTER"/>
+      <RETURN NAME="RESPONSE_ERROR_MSG" TYPE="id_String" AVAILABILITY="AFTER"/>
+      <RETURN NAME="RESPONSE_ERROR_CODE" TYPE="id_String" AVAILABILITY="AFTER"/>
+   </RETURNS>
+</COMPONENT>

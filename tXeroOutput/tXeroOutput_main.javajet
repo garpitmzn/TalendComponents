@@ -1,0 +1,312 @@
+<%@ jet
+	imports="
+	org.talend.core.model.process.INode
+	org.talend.core.model.process.ElementParameterParser
+	org.talend.core.model.metadata.IMetadataTable
+	org.talend.core.model.metadata.IMetadataColumn
+	org.talend.core.model.process.IConnection
+	org.talend.core.model.process.IConnectionCategory
+	org.talend.designer.codegen.config.CodeGeneratorArgument
+	org.talend.core.model.process.EConnectionType
+	org.talend.core.model.metadata.types.JavaTypesManager
+	org.talend.core.model.metadata.types.JavaType
+	java.util.List
+	"
+%>
+<%
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode)codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	String modulelabel;
+	String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
+	String Xero_CONSUMER_PK_FILE = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_FILE__");
+	Boolean bprocessChild = false;
+	String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
+	String api_method = ElementParameterParser.getValue(node, "__API_METHOD__");
+	String modulenameallNode = ElementParameterParser.getValue(node, "__MODULENAME__");
+	String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+	String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));	
+	String xmlFirstChildNode;
+	String strColumnNameLabel;
+	String xmlRootNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);
+	String xmlParentNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));	
+	String xmlChildNode = "";
+	String xmlLastChildNode = "";
+	/*
+	if (modulenameallNode.indexOf(":") ==  modulenameallNode.lastIndexOf(":")) {
+		xmlFirstChildNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);	
+	}else {
+		xmlFirstChildNode = modulenameallNode.substring(modulenameallNode.indexOf(":")+1,modulenameallNode.lastIndexOf(":"));
+		xmlLastChildNode = modulenameallNode.substring(modulenameallNode.lastIndexOf(":")+1);
+		bprocessChildNode = true; //3rd level child
+	}
+	*/
+	boolean dieOnError = ("true").equals(ElementParameterParser.getValue(node,"__DIE_ON_ERROR__"));
+%>
+	String inputxml_<%=cid %> = "";
+	String response_error_msg_<%=cid%> = "";
+	String response_error_code_<%=cid%> = "";
+	String inputxml_BatchPayments_<%=cid %> = "";
+	String inputxml_Address_POBOX_<%=cid %> = "<Address>" + "\n";
+	inputxml_Address_POBOX_<%=cid %> += "<AddressType>POBOX</AddressType>" + "\n";
+	String inputxml_Address_STREET_<%=cid %> = "<Address>" + "\n";
+	inputxml_Address_STREET_<%=cid %> += "<AddressType>STREET</AddressType>" + "\n";
+	String inputxml_Phone_DEFAULT_<%=cid %> = "<Phone>" + "\n";
+	inputxml_Phone_DEFAULT_<%=cid %> += "<PhoneType>DEFAULT</PhoneType>" + "\n";
+	String inputxml_Phone_DDI_<%=cid %> = "<Phone>" + "\n";
+	inputxml_Phone_DDI_<%=cid %> += "<PhoneType>DDI</PhoneType>" + "\n";
+	String inputxml_Phone_FAX_<%=cid %> = "<Phone>" + "\n";
+	inputxml_Phone_FAX_<%=cid %> += "<PhoneType>FAX</PhoneType>" + "\n";
+	String inputxml_Phone_MOBILE_<%=cid %> = "<Phone>" + "\n";
+	inputxml_Phone_MOBILE_<%=cid %> += "<PhoneType>MOBILE</PhoneType>" + "\n";
+	String inputxml_Bills_<%=cid %> = "";
+	String inputxml_Sales_<%=cid %> = "";
+	inputxml_<%=cid %> += "<?xml version='1.0' encoding='utf-8' ?>"+"\n";
+	inputxml_<%=cid %> += "<" + "<%=xmlRootNode %>" + ">" + "\n";
+	inputxml_<%=cid %> += "<" + "<%=xmlParentNode %>" + ">" + "\n";
+	
+	String xero_CONSUMER_KEY_<%=cid %> = <%=xero_CONSUMER_KEY %>;
+	String Xero_CONSUMER_PRIVATE_KEY_<%=cid %> = "";
+	try{
+		// Open the file that is the first 
+		// command line parameter
+		java.io.FileInputStream fstream_<%=cid %> = new java.io.FileInputStream(<%=Xero_CONSUMER_PK_FILE %>);
+		// Get the object of DataInputStream
+		java.io.DataInputStream in_<%=cid %> = new java.io.DataInputStream(fstream_<%=cid %>);
+		java.io.BufferedReader br_<%=cid %> = new java.io.BufferedReader(new java.io.InputStreamReader(in_<%=cid %>));
+		String strLine_<%=cid %>;
+		//Read File Line By Line
+		while ((strLine_<%=cid %> = br_<%=cid %>.readLine()) != null)   {
+			// Print the content on the console
+			Xero_CONSUMER_PRIVATE_KEY_<%=cid %> += strLine_<%=cid %>+"\n";
+		}
+		//Close the input stream
+		in_<%=cid %>.close();
+	}catch (Exception e_<%=cid %>){//Catch exception if any
+		System.err.println(new Date()+"-ERROR: " + e_<%=cid %>.getMessage());
+	}	
+<%
+	List<IMetadataTable> metadatas = node.getMetadataList();
+	if ((metadatas!=null)&&(metadatas.size()>0)) {//1
+		IMetadataTable metadata = metadatas.get(0);
+		if (metadata!=null) {//2
+			List< ? extends IConnection> conns = node.getIncomingConnections();
+			for (IConnection conn : conns) {//3
+				if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {//4    			
+					List<IMetadataColumn> columns = metadata.getListColumns();
+					int sizeColumns = columns.size();
+					for (int i = 0; i < sizeColumns; i++) {//5
+						IMetadataColumn column = columns.get(i);
+						JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+						boolean isPrimitive = JavaTypesManager.isJavaPrimitiveType( javaType, column.isNullable());
+						if (column.getLabel().indexOf("_") >= 0) { //column.getLabel().indexOf("_")
+							strColumnNameLabel = column.getLabel().substring(column.getLabel().indexOf("_")+1);
+						}else{
+							strColumnNameLabel = column.getLabel();
+						}//column.getLabel().indexOf("_")
+									
+%>
+	<%if( !isPrimitive ) {	//prim
+	%>
+	if(<%=conn.getName() %>.<%=column.getLabel() %> != null) { //nullcheck
+	<%
+		}
+		else{//prim
+	%>
+	if(!"".equals(String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>))) { //nullcheck
+	<%	
+		}//prim
+	%>
+		<% 
+			if ( column.getLabel().contains("Postal_")) {
+		%>
+			inputxml_Address_POBOX_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Address_POBOX_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Address_POBOX_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+		<%		
+			} 
+		if ( column.getLabel().contains("Street_")) {
+		%>
+			inputxml_Address_STREET_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Address_STREET_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Address_STREET_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("Default_Phone")) {
+		%>
+			inputxml_Phone_DEFAULT_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Phone_DEFAULT_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Phone_DEFAULT_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("DirectDial_Phone")) {
+		%>
+			inputxml_Phone_DDI_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Phone_DDI_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Phone_DDI_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("Fax_Phone")) {
+		%>
+			inputxml_Phone_FAX_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Phone_FAX_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Phone_FAX_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("Mobile_Phone")) {
+		%>
+			inputxml_Phone_MOBILE_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Phone_MOBILE_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Phone_MOBILE_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("BatchPayments_")) {
+		%>
+			inputxml_BatchPayments_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_BatchPayments_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_BatchPayments_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("Bills_")) {
+		%>
+			inputxml_Bills_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Bills_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Bills_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if ( column.getLabel().contains("Sales_")) {
+		%>
+			inputxml_Sales_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+			inputxml_Sales_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_Sales_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";			
+		<%		
+			} 
+		if (
+			!column.getLabel().contains("Postal_") &&
+			!column.getLabel().contains("Street_") &&
+			!column.getLabel().contains("Default_Phone") &&
+			!column.getLabel().contains("DirectDial_Phone") &&
+			!column.getLabel().contains("Mobile_Phone") &&
+			!column.getLabel().contains("Fax_Phone")	&&
+			!column.getLabel().contains("BatchPayments_")&&
+			!column.getLabel().contains("Bills_") &&
+			!column.getLabel().contains("Sales_")
+		) {
+		%>
+			inputxml_<%=cid %> += "<" + "<%=column.getLabel()%>" + ">";	
+			inputxml_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			inputxml_<%=cid %> += "</" + "<%=column.getLabel()%>" + ">" + "\n";
+		<%		
+			} 
+		%>
+	}//nullcheck
+<%
+				}//5
+    		}//4
+    	}//3
+    }//2
+}//1
+%>
+	inputxml_<%=cid %> += "<Addresses>" + inputxml_Address_POBOX_<%=cid %> + "</Address>";
+	inputxml_<%=cid %> += inputxml_Address_STREET_<%=cid %> + "</Address>" + "\n" + "</Addresses>";
+	inputxml_<%=cid %> += "<Phones>" + inputxml_Phone_DEFAULT_<%=cid %> + "</Phone>";
+	inputxml_<%=cid %> += inputxml_Phone_DDI_<%=cid %> + "</Phone>" + "\n";
+	inputxml_<%=cid %> += inputxml_Phone_FAX_<%=cid %> + "</Phone>" + "\n";
+	inputxml_<%=cid %> += inputxml_Phone_MOBILE_<%=cid %> + "</Phone>" + "\n" + "</Phones>";
+	inputxml_<%=cid %> += "<BatchPayments>" + "\n" + inputxml_BatchPayments_<%=cid %> + "\n" + "</BatchPayments>";
+	inputxml_<%=cid %> += "<PaymentTerms>" + "\n";
+	inputxml_<%=cid %> += "<Bills>" + "\n" + inputxml_Bills_<%=cid %> + "\n" + "</Bills>" ;
+	inputxml_<%=cid %> += "<Sales>" + "\n" + inputxml_Sales_<%=cid %> + "\n" + "</Sales>" ;
+	inputxml_<%=cid %> += "</PaymentTerms>" + "\n";	
+	
+	inputxml_<%=cid %> += "</" + "<%=xmlParentNode %>" + ">";
+	inputxml_<%=cid %> += "</" + "<%=xmlRootNode %>" + ">";
+	System.out.println( inputxml_<%=cid %> );
+	org.apache.http.client.methods.HttpPost request_<%=cid %>;
+	java.io.InputStream inputstream_<%=cid %>;
+	org.w3c.dom.Document doc_<%=cid %>;
+	String sResponseReceived_<%=cid %> = "";
+	javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+	org.w3c.dom.NodeList nodeList_schemacol_<%=cid %>;
+	org.w3c.dom.NodeList nodeList_schemacol_child_<%=cid %>;
+	org.w3c.dom.Node nNode_child_<%=cid %>;
+	org.w3c.dom.Element eElement_child_<%=cid %>;
+	org.w3c.dom.NodeList nodeList_child_<%=cid %>;
+	String strAttributeValueIfFound_<%=cid %> = "";
+	String xero_apiurl_<%=cid %> = <%=xero_apiurl %>;
+	xero_apiurl_<%=cid %> += "/<%=modulename %>";
+	org.w3c.dom.Element eElement_<%=cid %>  = null;
+	//java.io.File file_<%=cid %> = new java.io.File("E:/arpit/xero.xml");
+	System.out.println(new Date()+"-INFO-Submitting http request - "+xero_apiurl_<%=cid %>);
+	net.oauth.OAuthServiceProvider serviceProvider_<%=cid %> = new net.oauth.OAuthServiceProvider(null,null,null);
+	net.oauth.OAuthConsumer consumer_<%=cid %> = new net.oauth.OAuthConsumer(null, xero_CONSUMER_KEY_<%=cid %>, null, serviceProvider_<%=cid %>);
+	consumer_<%=cid %>.setProperty(net.oauth.signature.RSA_SHA1.PRIVATE_KEY, Xero_CONSUMER_PRIVATE_KEY_<%=cid %>);
+	consumer_<%=cid %>.setProperty(net.oauth.OAuth.OAUTH_SIGNATURE_METHOD, net.oauth.OAuth.RSA_SHA1);
+	net.oauth.OAuthAccessor accessor_<%=cid %> = new net.oauth.OAuthAccessor(consumer_<%=cid %>);
+	
+	net.oauth.client.OAuthClient client_<%=cid %> = new net.oauth.client.OAuthClient(new net.oauth.client.httpclient4.HttpClient4());
+    accessor_<%=cid %>.accessToken = xero_CONSUMER_KEY_<%=cid %>;
+	net.oauth.OAuthMessage response_<%=cid %> = client_<%=cid %>.invoke(accessor_<%=cid %>,  net.oauth.OAuthMessage.POST, xero_apiurl_<%=cid %>, 
+		net.oauth.OAuth.newList("xml", inputxml_<%=cid %>));
+	System.out.println(response_<%=cid %>.readBodyAsString());  
+  	inputstream_<%=cid %> = response_<%=cid %>.getBodyAsStream();
+	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+ 	doc_<%=cid %> = builder_<%=cid %>.parse(inputstream_<%=cid %>);
+	//doc_<%=cid %> = builder_<%=cid %>.parse(file_<%=cid %>);
+	if (doc_<%=cid %> != null) {//doc_if_null
+		System.out.println(doc_<%=cid %>.toString() );
+    	org.w3c.dom.NodeList nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("Response");
+		org.w3c.dom.Node nNode_<%=cid %> = nList_<%=cid %>.item(0);
+		eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
+		nodeList_schemacol_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("Status");
+	if (nodeList_schemacol_<%=cid %>.getLength() > 0) {// sizecheck
+		if (eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent() 
+			!= null && eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent().length() != 0) {// nullcheck
+			sResponseReceived_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent();
+		}// nullcheck
+		else {
+			sResponseReceived_<%=cid %> = "NOT OK";
+		}
+	}//sizecheck		
+  
+	    if (("ok").equals(sResponseReceived_<%=cid %>.toLowerCase())) {//responseok
+			System.out.println(new Date()+"-INFO- Response is OK");
+			//nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
+		}	//responseok
+	else
+	{
+		response_error_msg_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent();
+		response_error_code_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent();
+		System.err.println(new Date()+ "-ERROR: Error message is : " + response_error_msg_<%=cid%>);
+		System.err.println(new Date()+ "-ERROR: Error code is : " + response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);			 	
+		<%
+			    if ( dieOnError ) {
+		%>
+			throw new RuntimeException(new Date()+ "-ERROR - freshbook api() returned error in response");
+		<%
+			}//dieonerror
+		%>
+	}//responseok
+	}//doc_if_null
+	else
+	{
+		response_error_msg_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent();
+		response_error_code_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent();
+		System.err.println(new Date()+ "-ERROR: Error message is : " + response_error_msg_<%=cid%>);
+		System.err.println(new Date()+ "-ERROR: Error code is : " + response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
+		globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);
+		globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);			 	
+		<%
+			    if ( dieOnError ) {
+		%>
+			throw new RuntimeException(new Date()+ "-ERROR - freshbook api() returned error in response");
+		<%
+			}//dieonerror
+		%>
+	}//doc_if_null
