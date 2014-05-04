@@ -16,35 +16,21 @@
 	INode node = (INode)codeGenArgument.getArgument();
 	String cid = node.getUniqueName();	
 	Boolean bprocessChild = false;
-	String modulelabel;
-	String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
-	String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+	//String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
 	boolean dieOnError = ("true").equals(ElementParameterParser.getValue(node,"__DIE_ON_ERROR__"));	
 %>
- 			nb_line_<%=cid %>++;
+ 			//nb_line_<%=cid %>++;
 			}//doc3
 		}//parentfor				
-	//iCurrentPage_<%=cid %>++;	
 		}//responseok
 		else{   	
-			//iTotalPage_<%=cid %> = -1;
-			response_error_msg_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("error").item(0).getTextContent();
-			response_error_code_<%=cid%> = eElement_<%=cid %>.getElementsByTagName("code").item(0).getTextContent();
-			System.err.println(new Date()+ "-ERROR: Error message is : " + response_error_msg_<%=cid%>);
-			System.err.println(new Date()+ "-ERROR: Error code is : " + response_error_code_<%=cid%>);
 			<%
 			    if ( dieOnError ) {
 			 %>
-				globalMap.put("<%=cid %>_XML_REQUEST",xero_apiurl_<%=cid %>);
-				globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
-				globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);			 	
-				throw new RuntimeException(new Date()+ "-ERROR - freshbook api() returned error in response");
+				throw new RuntimeException(new Date()+ "-ERROR - Xero api() returned error in response");
 			<%
 				}
 			%>	
 			}			
 	}//doc_if_null		
 	globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid%>); 
-	globalMap.put("<%=cid %>_XML_REQUEST",xero_apiurl_<%=cid %>);
-	globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG",response_error_msg_<%=cid%>);
-	globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE",response_error_code_<%=cid%>);

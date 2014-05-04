@@ -27,7 +27,6 @@
 	String page_filter = ElementParameterParser.getValue(node, "__PAGE_FILTER__");
 	String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
 	String post_method = ElementParameterParser.getValue(node, "__POST_METHOD__");
-	String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
 	String sort_by = ElementParameterParser.getValue(node, "__SORT_BY__");
 	String sort_mode = ElementParameterParser.getValue(node, "__SORT_MODE__");
 	String include_archive = ElementParameterParser.getValue(node, "__INCLUDE_ARCHIVED__");
@@ -35,18 +34,11 @@
 	List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
 	int size_filter_input_list = filter_input_list.size();
 	/*
-	Logic is that we use : separator in modulename to identify child nodes and parent nodes
-	bprocesschild is used to identify whether we need to process lowest level child
-	challenge is building the child level xml - as freshbooks expect a specific pattern.
-	also response from freshbooks will contain number of pages the request returned 
-	and if user has specified page filter we restrict pages to that page filter number
-	and we continue to keep sending request to freshbooks unless we have received all 
-	pages.
+	Logic is that we use : we parse xml received based on child nodes and type of address and phone type and payment terms
 	*/
 %>
 	int nb_line_<%=cid %> = 0;
 	String Xero_CONSUMER_PK_KEY<%=cid %> = "";
-	
 	String xero_CONSUMER_KEY_<%=cid %> = <%=xero_CONSUMER_KEY %>;
 	String Xero_CONSUMER_PRIVATE_KEY_<%=cid %> = "";
 	try{
@@ -114,6 +106,12 @@
 	org.w3c.dom.NodeList nodeList_child_<%=cid %>;
 	String strAttributeValueIfFound_<%=cid %> = "";
 	xero_apiurl_<%=cid %> += "/<%=modulename %>";
+	javax.xml.transform.Transformer tf_<%=cid %> = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+	tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
+	tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+	java.io.Writer out_<%=cid %> = new java.io.StringWriter();
+	String response_from_xero_msg_<%=cid%> = "";
+	
 	if ( !<%=page_filter%>.equals("") && !<%=page_filter%>.equals("null")) {
 		xero_apiurl_<%=cid %> += "?page="+<%=page_filter%>;
 	}
@@ -128,8 +126,8 @@
 	) {
 		xero_apiurl_<%=cid %> += "&If-Modified-Since=" + java.net.URLEncoder.encode(<%=last_modified_date%>);
 	}
-	//java.io.File file_<%=cid %> = new java.io.File("E:/arpit/xero.xml");
 	System.out.println(new Date()+"-INFO-Submitting http request - "+xero_apiurl_<%=cid %>);
+	globalMap.put("<%=cid %>_HTTP_REQUEST", xero_apiurl_<%=cid %>);
 	net.oauth.OAuthServiceProvider serviceProvider_<%=cid %> = new net.oauth.OAuthServiceProvider(null,null,null);
 	net.oauth.OAuthConsumer consumer_<%=cid %> = new net.oauth.OAuthConsumer(null, xero_CONSUMER_KEY_<%=cid %>, null, serviceProvider_<%=cid %>);
 	consumer_<%=cid %>.setProperty(net.oauth.signature.RSA_SHA1.PRIVATE_KEY, Xero_CONSUMER_PRIVATE_KEY_<%=cid %>);
@@ -144,7 +142,9 @@
   	inputstream_<%=cid %> = response_<%=cid %>.getBodyAsStream();;
 	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
  	doc_<%=cid %> = builder_<%=cid %>.parse(inputstream_<%=cid %>);
-	//doc_<%=cid %> = builder_<%=cid %>.parse(file_<%=cid %>);
+	tf_<%=cid %>.transform(new javax.xml.transform.dom.DOMSource(doc_<%=cid %>), new javax.xml.transform.stream.StreamResult(out_<%=cid %>));
+	response_from_xero_msg_<%=cid%> = out_<%=cid %>.toString();
+	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO",response_from_xero_msg_<%=cid%>);
 	if (doc_<%=cid %> != null) {//doc_if_null
 		System.out.println(doc_<%=cid %>.toString() );
     	org.w3c.dom.NodeList nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("Response");
