@@ -21,7 +21,7 @@
 	String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
 	String Xero_CONSUMER_PK_FILE = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_FILE__");
 	String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
-	String api_method = ElementParameterParser.getValue(node, "__API_METHOD__");
+	String api_method = ElementParameterParser.getValue(node, "__APIMETHOD__");
 	String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
 	String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));	
 	/*
@@ -31,5 +31,5 @@
 %>	
 	Integer nb_line_<%=cid %> = 0;
 	globalMap.put("<%=cid %>_XML_REQUEST", "");
-	globalMap.put("<%=cid %>_RESPONSE_ERROR_MSG","");
-	globalMap.put("<%=cid %>_RESPONSE_ERROR_CODE","");
+	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO","");
+	globalMap.put("<%=cid %>__XERO_RECORD_ID","");
