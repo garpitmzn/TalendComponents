@@ -1,0 +1,155 @@
+<%@ jet
+	imports="
+	org.talend.core.model.process.INode
+	org.talend.core.model.process.ElementParameterParser
+	org.talend.core.model.metadata.IMetadataTable
+	org.talend.core.model.metadata.IMetadataColumn
+	org.talend.core.model.process.IConnection
+	org.talend.core.model.process.IConnectionCategory
+	org.talend.designer.codegen.config.CodeGeneratorArgument
+	org.talend.core.model.process.EConnectionType
+	org.talend.core.model.metadata.types.JavaTypesManager
+	org.talend.core.model.metadata.types.JavaType
+	java.util.List
+	java.util.HashMap
+	java.util.Map
+	java.util.ArrayList
+	"
+%>
+<%
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode)codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
+	String Xero_CONSUMER_PK_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_KEY__");
+	Boolean bprocessChild = false;
+	String last_modified_date = ElementParameterParser.getValue(node, "__LAST_MODIFIED_DATE__");
+	String page_filter = ElementParameterParser.getValue(node, "__PAGE_FILTER__");
+	String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
+	String post_method = ElementParameterParser.getValue(node, "__POST_METHOD__");
+	String sort_by = ElementParameterParser.getValue(node, "__SORT_BY__");
+	String sort_mode = ElementParameterParser.getValue(node, "__SORT_MODE__");
+	String include_archive = ElementParameterParser.getValue(node, "__INCLUDE_ARCHIVED__");
+	String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+	List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
+	int size_filter_input_list = filter_input_list.size();
+	/*
+	Logic is that we use : we parse xml received based on child nodes and type of address and phone type and payment terms
+	*/
+%>
+	int nb_line_<%=cid %> = 0;
+	String xero_CONSUMER_KEY_<%=cid %> = <%=xero_CONSUMER_KEY %>;
+	String Xero_CONSUMER_PRIVATE_KEY_<%=cid %> = <%=Xero_CONSUMER_PK_KEY %>;
+	String xero_apiurl_<%=cid %> = <%=xero_apiurl %>;
+	String str_xero_apiurl_filter_<%=cid %> = "";
+	String strfilterCondition_<%=cid %> = "";
+	String response_error_msg_<%=cid %> = "";
+	String response_error_code_<%=cid %> = "";
+<%
+	for(int g = 0; g < size_filter_input_list; g++){ //for-size_filter_input
+		Map<String, String> filter_input_listmap = filter_input_list.get(g);
+		String inputColumn = filter_input_listmap.get("FILTER_COLUMN");
+		String inputValue = filter_input_listmap.get("FILTER_VALUE");
+		String parsedColumnName = "";
+		if (inputColumn.indexOf("_") >= 0) { //inputColumn.indexOf("_")
+				parsedColumnName = inputColumn.substring(inputColumn.indexOf("_")+1);
+			}else{
+				parsedColumnName = inputColumn;
+			}//inputColumn.indexOf("_")
+		if ( !("UpdatedDateUTC").equals(inputColumn) &&  !("ContactID").equals(inputColumn) ){ //UpdatedDateUTC ContactID
+%>
+		str_xero_apiurl_filter_<%=cid %> += "<%=parsedColumnName%>==";
+		str_xero_apiurl_filter_<%=cid %> += "\""+<%=inputValue%>+"\"" + " AND ";
+<%
+		}//UpdatedDateUTC ContactID
+		else {//UpdatedDateUTC ContactID
+			if ( !("UpdatedDateUTC").equals(inputColumn) &&  ("ContactID").equals(inputColumn) ){ //ContactID").equals(inputColumn)
+%>			
+				str_xero_apiurl_filter_<%=cid %> += "<%=inputColumn%>=";
+				str_xero_apiurl_filter_<%=cid %> += "Guid(\""+<%=inputValue%>+"\")" + " AND ";
+<%			}//ContactID").equals(inputColumn)
+		}//UpdatedDateUTC ContactID
+	}//for-size_filter_input
+%>
+	//remove extra AND at the end if there
+	if (!("").equals(str_xero_apiurl_filter_<%=cid %>) && str_xero_apiurl_filter_<%=cid %> != null) {
+		str_xero_apiurl_filter_<%=cid %> = str_xero_apiurl_filter_<%=cid %>.substring(0, str_xero_apiurl_filter_<%=cid %>.lastIndexOf(" AND "));
+	}
+	//org.apache.http.client.methods.HttpPost request_<%=cid %>;
+	java.io.InputStream inputstream_<%=cid %>;
+	org.w3c.dom.Document doc_<%=cid %>;
+	String sResponseReceived_<%=cid %> = "";
+	javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+	org.w3c.dom.NodeList nodeList_schemacol_<%=cid %>;
+	org.w3c.dom.NodeList nodeList_schemacol_child_<%=cid %>;
+	org.w3c.dom.Node nNode_child_<%=cid %>;
+	org.w3c.dom.Element eElement_child_<%=cid %>;
+	org.w3c.dom.NodeList nodeList_child_<%=cid %>;
+	String strAttributeValueIfFound_<%=cid %> = "";
+	xero_apiurl_<%=cid %> += "/<%=modulename %>";
+	javax.xml.transform.Transformer tf_<%=cid %> = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+	tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
+	tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+	java.io.Writer out_<%=cid %> = new java.io.StringWriter();
+	String response_from_xero_msg_<%=cid%> = "";
+	if ( !<%=page_filter%>.equals("") && !<%=page_filter%>.equals("null")) {
+		xero_apiurl_<%=cid %> += "?page="+<%=page_filter%>;
+	}
+	if ( !("").equals(str_xero_apiurl_filter_<%=cid %>) && str_xero_apiurl_filter_<%=cid %> != null	){
+		xero_apiurl_<%=cid %> += "&where=" + java.net.URLEncoder.encode(str_xero_apiurl_filter_<%=cid %>);
+	}
+	xero_apiurl_<%=cid %> += "&order=" + java.net.URLEncoder.encode(<%=sort_by %> + " " + <%=sort_mode %>);
+	xero_apiurl_<%=cid %> += "&includeArchived=" + <%=include_archive %>;
+	
+	System.out.println(new Date()+"-INFO-Submitting http request - "+xero_apiurl_<%=cid %>);
+	globalMap.put("<%=cid %>_HTTP_REQUEST", xero_apiurl_<%=cid %>);
+	net.oauth.OAuthServiceProvider serviceProvider_<%=cid %> = new net.oauth.OAuthServiceProvider(null,null,null);
+	net.oauth.OAuthConsumer consumer_<%=cid %> = new net.oauth.OAuthConsumer(null, xero_CONSUMER_KEY_<%=cid %>, null, serviceProvider_<%=cid %>);
+	consumer_<%=cid %>.setProperty(net.oauth.signature.RSA_SHA1.PRIVATE_KEY, Xero_CONSUMER_PRIVATE_KEY_<%=cid %>);
+	consumer_<%=cid %>.setProperty(net.oauth.OAuth.OAUTH_SIGNATURE_METHOD, net.oauth.OAuth.RSA_SHA1);
+	net.oauth.OAuthAccessor accessor_<%=cid %> = new net.oauth.OAuthAccessor(consumer_<%=cid %>);
+	accessor_<%=cid %>.accessToken = xero_CONSUMER_KEY_<%=cid %>;
+    net.oauth.OAuthMessage request_<%=cid %> = accessor_<%=cid %>.newRequestMessage(net.oauth.OAuthMessage.GET, xero_apiurl_<%=cid %>, null);	
+	if ( !<%=last_modified_date%>.equals("") && !<%=last_modified_date%>.equals("null")
+		&& !<%=last_modified_date%>.equals("YYYY-MM-DDTHH24:MI:SS")
+	) {
+		xero_apiurl_<%=cid %> += "&If-Modified-Since=" + java.net.URLEncoder.encode(<%=last_modified_date%>);
+		java.text.DateFormat formatter_<%=cid%> = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.ENGLISH);
+		java.util.Date date_<%=cid%> = formatter_<%=cid%>.parse(<%=last_modified_date%>);
+		String theNewestTimestamp_<%=cid%> = formatter_<%=cid%>.format(date_<%=cid%>);
+		request_<%=cid %>.getHeaders().add(new net.oauth.OAuth.Parameter("If-Modified-Since", theNewestTimestamp_<%=cid%>));
+	}
+	
+	net.oauth.http.HttpMessage httpRequest_<%=cid %> = net.oauth.http.HttpMessage.newRequest(request_<%=cid %>, net.oauth.ParameterStyle.AUTHORIZATION_HEADER);
+	net.oauth.http.HttpResponseMessage httpResponse_<%=cid %> = new net.oauth.client.httpclient4.HttpClient4().execute(httpRequest_<%=cid %>, new java.util.HashMap<String, Object>());
+	httpResponse_<%=cid %> = net.oauth.http.HttpMessageDecoder.decode(httpResponse_<%=cid %>);	
+	
+	inputstream_<%=cid %> = httpResponse_<%=cid %>.getBody();
+	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+ 	doc_<%=cid %> = builder_<%=cid %>.parse(inputstream_<%=cid %>);
+	tf_<%=cid %>.transform(new javax.xml.transform.dom.DOMSource(doc_<%=cid %>), new javax.xml.transform.stream.StreamResult(out_<%=cid %>));
+	response_from_xero_msg_<%=cid%> = out_<%=cid %>.toString();
+	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO",response_from_xero_msg_<%=cid%>);
+	if (doc_<%=cid %> != null) {//doc_if_null
+		System.out.println(doc_<%=cid %>.toString() );
+    	org.w3c.dom.NodeList nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("Response");
+		org.w3c.dom.Node nNode_<%=cid %> = nList_<%=cid %>.item(0);
+		org.w3c.dom.Element eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
+		nodeList_schemacol_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("Status");
+	if (nodeList_schemacol_<%=cid %>.getLength() > 0) {// sizecheck
+		if (eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent() 
+			!= null && eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent().length() != 0) {// nullcheck
+			sResponseReceived_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent();
+		}// nullcheck
+		else {
+			sResponseReceived_<%=cid %> = "NOT OK";
+		}
+	}//sizecheck		
+  
+	    if (("ok").equals(sResponseReceived_<%=cid %>.toLowerCase())) {//responseok
+			System.out.println(new Date()+"-INFO- Response is OK");
+			nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
+    	for (int i_<%=cid %> = 0; i_<%=cid %> < nList_<%=cid %>.getLength(); i_<%=cid %>++) {//parentfor
+			nNode_<%=cid %> = nList_<%=cid %>.item(i_<%=cid %>);
+ 			if (nNode_<%=cid %>.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {//doc3
+ 				eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>; 

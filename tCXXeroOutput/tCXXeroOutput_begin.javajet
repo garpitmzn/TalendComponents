@@ -1,0 +1,35 @@
+<%@ jet
+	imports="
+	org.talend.core.model.process.INode
+	org.talend.core.model.process.ElementParameterParser
+	org.talend.core.model.metadata.IMetadataTable
+	org.talend.core.model.metadata.IMetadataColumn
+	org.talend.core.model.process.IConnection
+	org.talend.core.model.process.IConnectionCategory
+	org.talend.designer.codegen.config.CodeGeneratorArgument
+	org.talend.core.model.process.EConnectionType
+	org.talend.core.model.metadata.types.JavaTypesManager
+	org.talend.core.model.metadata.types.JavaType
+	java.util.List
+	"
+%>
+<%
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode)codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	Boolean bprocessChild = false;
+	String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
+	String Xero_CONSUMER_PK_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_KEY__");
+	String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
+	String api_method = ElementParameterParser.getValue(node, "__APIMETHOD__");
+	String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+	String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));	
+	/*
+	Logic is to build xml for request - using : as separator for xml tags formation
+	in modulename. using this we identify whether child node has to be built.
+	*/
+%>	
+	Integer nb_line_<%=cid %> = 0;
+	globalMap.put("<%=cid %>_XML_REQUEST", "");
+	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO","");
+	globalMap.put("<%=cid %>__XERO_RECORD_ID","");
