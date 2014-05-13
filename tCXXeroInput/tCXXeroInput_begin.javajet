@@ -22,6 +22,8 @@
 	String cid = node.getUniqueName();
 	String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
 	String Xero_CONSUMER_PK_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_KEY__");
+	final String debug = ElementParameterParser.getValue(node, "__DEBUG__");	
+	final String apiTimeout = ElementParameterParser.getValue(node, "__API_TIMEOUT__");
 	Boolean bprocessChild = false;
 	String last_modified_date = ElementParameterParser.getValue(node, "__LAST_MODIFIED_DATE__");
 	String page_filter = ElementParameterParser.getValue(node, "__PAGE_FILTER__");
@@ -100,8 +102,7 @@
 	}
 	xero_apiurl_<%=cid %> += "&order=" + java.net.URLEncoder.encode(<%=sort_by %> + " " + <%=sort_mode %>);
 	xero_apiurl_<%=cid %> += "&includeArchived=" + <%=include_archive %>;
-	
-	System.out.println(new Date()+"-INFO-Submitting http request - "+xero_apiurl_<%=cid %>);
+		
 	globalMap.put("<%=cid %>_HTTP_REQUEST", xero_apiurl_<%=cid %>);
 	net.oauth.OAuthServiceProvider serviceProvider_<%=cid %> = new net.oauth.OAuthServiceProvider(null,null,null);
 	net.oauth.OAuthConsumer consumer_<%=cid %> = new net.oauth.OAuthConsumer(null, xero_CONSUMER_KEY_<%=cid %>, null, serviceProvider_<%=cid %>);
@@ -113,22 +114,27 @@
 	if ( !<%=last_modified_date%>.equals("") && !<%=last_modified_date%>.equals("null")
 		&& !<%=last_modified_date%>.equals("YYYY-MM-DDTHH24:MI:SS")
 	) {
-		xero_apiurl_<%=cid %> += "&If-Modified-Since=" + java.net.URLEncoder.encode(<%=last_modified_date%>);
+		//xero_apiurl_<%=cid %> += "&If-Modified-Since=" + java.net.URLEncoder.encode(<%=last_modified_date%>);
 		java.text.DateFormat formatter_<%=cid%> = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.ENGLISH);
 		java.util.Date date_<%=cid%> = formatter_<%=cid%>.parse(<%=last_modified_date%>);
 		String theNewestTimestamp_<%=cid%> = formatter_<%=cid%>.format(date_<%=cid%>);
 		request_<%=cid %>.getHeaders().add(new net.oauth.OAuth.Parameter("If-Modified-Since", theNewestTimestamp_<%=cid%>));
 	}
+	net.oauth.client.OAuthClient client_<%=cid%> = new net.oauth.client.OAuthClient(new net.oauth.client.httpclient4.HttpClient4());
+	client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, <%=apiTimeout%>*1000);
+	client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, <%=apiTimeout%>*1000);
+
+	net.oauth.OAuthMessage response_<%=cid %> = client_<%=cid%>.invoke(request_<%=cid %>, net.oauth.ParameterStyle.AUTHORIZATION_HEADER);
+  	inputstream_<%=cid %> = response_<%=cid %>.getBodyAsStream();
 	
-	net.oauth.http.HttpMessage httpRequest_<%=cid %> = net.oauth.http.HttpMessage.newRequest(request_<%=cid %>, net.oauth.ParameterStyle.AUTHORIZATION_HEADER);
-	net.oauth.http.HttpResponseMessage httpResponse_<%=cid %> = new net.oauth.client.httpclient4.HttpClient4().execute(httpRequest_<%=cid %>, new java.util.HashMap<String, Object>());
-	httpResponse_<%=cid %> = net.oauth.http.HttpMessageDecoder.decode(httpResponse_<%=cid %>);	
-	
-	inputstream_<%=cid %> = httpResponse_<%=cid %>.getBody();
 	builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
  	doc_<%=cid %> = builder_<%=cid %>.parse(inputstream_<%=cid %>);
 	tf_<%=cid %>.transform(new javax.xml.transform.dom.DOMSource(doc_<%=cid %>), new javax.xml.transform.stream.StreamResult(out_<%=cid %>));
 	response_from_xero_msg_<%=cid%> = out_<%=cid %>.toString();
+	if ("1".equals(<%=debug%>)){
+		System.out.println(new Date()+"-INFO-Submitted http request - "+xero_apiurl_<%=cid %>);
+		System.out.println(new Date()+"-INFO-Response from Xero - "+response_from_xero_msg_<%=cid%>);
+	}
 	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO",response_from_xero_msg_<%=cid%>);
 	if (doc_<%=cid %> != null) {//doc_if_null
 		System.out.println(doc_<%=cid %>.toString() );
@@ -143,6 +149,8 @@
 		}// nullcheck
 		else {
 			sResponseReceived_<%=cid %> = "NOT OK";
+			globalMap.put("<%=cid %>_ERROR_MESSAGE",response_from_xero_msg_<%=cid%>);
+			globalMap.put("<%=cid %>_ERROR_ERRORS",response_from_xero_msg_<%=cid%>);
 		}
 	}//sizecheck		
   

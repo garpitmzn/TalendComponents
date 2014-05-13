@@ -11,6 +11,7 @@
 	org.talend.core.model.metadata.types.JavaTypesManager
 	org.talend.core.model.metadata.types.JavaType
 	java.util.List
+    java.util.Map			
 	"
 %>
 <%
@@ -23,12 +24,27 @@
 	  IConnection conn = node.getIncomingConnections().get(0);
 	  connName = conn.getName();
 	}
+    //SUCCESS connection 
+	String successConnName = null;
+	List<? extends IConnection> successConns = node.getOutgoingConnections("SUCCESS");
+	if(successConns != null && successConns.size() > 0) {
+		IConnection successConn = successConns.get(0);
+	    successConnName = successConn.getName();
+	}
+	
+	List<IMetadataColumn> successColumnList = null;
+	IMetadataTable metadataTable2 = node.getMetadataFromConnector("SUCCESS");
+	if(metadataTable2 != null) {
+	    successColumnList = metadataTable2.getListColumns();      
+	}
 	
 	
 	String modulelabel;
 	String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
 	String Xero_CONSUMER_PK_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_KEY__");
 	Boolean bprocessChild = false;
+	final String debug = ElementParameterParser.getValue(node, "__DEBUG__");	
+	final String apiTimeout = ElementParameterParser.getValue(node, "__API_TIMEOUT__");	
 	String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
 	String api_method = ElementParameterParser.getValue(node, "__APIMETHOD__");
 	String modulenameallNode = ElementParameterParser.getValue(node, "__MODULENAME__");
@@ -192,10 +208,6 @@
 	}//nullcheck
 <%
 				}//5
-    		}//4
-    	}//3
-    }//2
-}//1
 %>
 	inputxml_<%=cid %> += "<Addresses>" + "\n" + inputxml_Address_POBOX_<%=cid %>  + "</Address>" + "\n";
 	inputxml_<%=cid %> += inputxml_Address_STREET_<%=cid %> + "</Address>" + "\n" + "</Addresses>" + "\n";
@@ -210,7 +222,7 @@
 	inputxml_<%=cid %> += "</PaymentTerms>" + "\n";	
 	
 	inputxml_<%=cid %> += "</" + "<%=xmlParentNode %>" + ">" + "\n";
-	inputxml_<%=cid %> += "</" + "<%=xmlRootNode %>" + ">";	
+	inputxml_<%=cid %> += "</" + "<%=xmlRootNode %>" + ">";		
 	globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
 	org.apache.http.client.methods.HttpPost request_<%=cid %>;
 	java.io.InputStream inputstream_<%=cid %>;
@@ -238,6 +250,8 @@
 	net.oauth.OAuthAccessor accessor_<%=cid %> = new net.oauth.OAuthAccessor(consumer_<%=cid %>);
 	
 	net.oauth.client.OAuthClient client_<%=cid %> = new net.oauth.client.OAuthClient(new net.oauth.client.httpclient4.HttpClient4());
+	client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, <%=apiTimeout%>*1);
+	client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, <%=apiTimeout%>*1);	
     accessor_<%=cid %>.accessToken = xero_CONSUMER_KEY_<%=cid %>;
 	net.oauth.OAuthMessage response_<%=cid %> = client_<%=cid %>.invoke(accessor_<%=cid %>,  net.oauth.OAuthMessage.<%=api_method %>, xero_apiurl_<%=cid %>, 
 		net.oauth.OAuth.newList("xml", inputxml_<%=cid %>));
@@ -247,6 +261,10 @@
 	tf_<%=cid %>.transform(new javax.xml.transform.dom.DOMSource(doc_<%=cid %>), new javax.xml.transform.stream.StreamResult(out_<%=cid %>));
 	response_from_xero_msg_<%=cid%> = out_<%=cid %>.toString();
 	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO",response_from_xero_msg_<%=cid%>);
+	if ("1".equals(<%=debug%>)){
+		System.out.println(new Date()+"-INFO-Submitted xml request - "+inputxml_<%=cid %>);
+		System.out.println(new Date()+"-INFO-Response from Xero - "+response_from_xero_msg_<%=cid%>);
+	}
 	
 	if (doc_<%=cid %> != null) {//doc_if_null
     	org.w3c.dom.NodeList nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("Response");
@@ -260,6 +278,8 @@
 		}// nullcheck
 		else {
 			sResponseReceived_<%=cid %> = "NOT OK";
+			globalMap.put("<%=cid %>_ERROR_MESSAGE",response_from_xero_msg_<%=cid%>);
+			globalMap.put("<%=cid %>_ERROR_ERRORS",response_from_xero_msg_<%=cid%>);
 		}
 	}//sizecheck		
   
@@ -267,45 +287,14 @@
 			System.out.println(new Date()+"-INFO- Response is OK");
 			//nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
 			if (doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").getLength() != 0){
-					globalMap.put("<%=cid %>_XERO_RECORD_ID", doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").item(0).getTextContent());
-				}//getlength	
-			if (doc_<%=cid %>.getElementsByTagName("UpdatedDateUTC").getLength() != 0){
-					globalMap.put("<%=cid %>_XERO_RECCREATEDATE_UTC", doc_<%=cid %>.getElementsByTagName("UpdatedDateUTC").item(0).getTextContent());
-				}//getlength
-		<%
-			List<? extends IConnection> conns = node.getOutgoingSortedConnections();
-			List<? extends IConnection> connsFilter = node.getOutgoingConnections("FILTER");
-			if (conns != null && conns.size() > 0) {
-			  for (int i = 0; i < conns.size(); i++) {
-				IConnection conn = conns.get(i);
-				if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {
-				%> System.out.println("77777");
-				  <%=conn.getName()%> = null;
-				<%
+					globalMap.put("<%=cid %>_xero_id", doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").item(0).getTextContent());
 				}
-			  }
-			}
-      if (connsFilter != null) {//1
-
-        if (connsFilter.size() > 0) {//2
-
-          for (int i = 0; i < connsFilter.size(); i++) {//3
-            IConnection conn = connsFilter.get(i);
-
-            if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {//4
-            %>
-              if(<%=conn.getName() %> == null){ 
-                <%=conn.getName() %> = new <%=conn.getName() %>Struct();
-              }
-			  <%
-			  int itemp = 0;
-			%> System.out.println(<%=itemp %>);
-			<%
-            }//4
-          }//3
-        }//2
-      }//1
-	%>		
+			if (doc_<%=cid %>.getElementsByTagName("UpdatedDateUTC").getLength() != 0){
+					globalMap.put("<%=cid %>_xero_create_dt", doc_<%=cid %>.getElementsByTagName("UpdatedDateUTC").item(0).getTextContent());
+				}
+			if (doc_<%=cid %>.getElementsByTagName("DateTimeUTC").getLength() != 0){
+					globalMap.put("<%=cid %>_xero_update_dt", doc_<%=cid %>.getElementsByTagName("DateTimeUTC").item(0).getTextContent());
+				}
 		}	//responseok
 	else
 	{
@@ -317,7 +306,7 @@
 			throw new RuntimeException(new Date()+ "-ERROR - Xero api() returned error in response");
 		<%
 			}//dieonerror
-		%>
+		%>		
 	}//responseok
 	}//doc_if_null
 	else
@@ -332,3 +321,48 @@
 			}//dieonerror
 		%>
 	}//doc_if_null
+
+<%
+	               			//successful, propagate columns, add ID
+	               			if(  successConnName!=null && !successConnName.trim().equals("") && successColumnList!=null ){//success
+%>
+	               				<%=successConnName%> = new <%=successConnName%>Struct();
+<%
+		               			for(IMetadataColumn column : columns) { //for
+%>
+		               				<%=successConnName%>.<%=column.getLabel()%> = <%=conn.getName()%>.<%=column.getLabel()%>;
+<%
+								}//for	     
+								//below code is for custom id, created_dt, updated_dt columns
+		               			for (IMetadataColumn column: successColumnList) {//for
+		               				JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+									String pattern = column.getPattern() == null || column.getPattern().trim().length() == 0 ? null : column.getPattern();								
+									if (column.isCustom()) {//ifcustom
+										if (column.getLabel().equals("created_at")){//33
+%>
+											<%=successConnName%>.<%=column.getLabel()%> = FastDateParser.getInstance(<%=pattern%>).parse((String) globalMap.get("<%=cid %>_xero_create_dt"));
+<%	
+										}//33
+										if (column.getLabel().equals("updated_at")){//33
+%>
+											<%=successConnName%>.<%=column.getLabel()%> = FastDateParser.getInstance(<%=pattern%>).parse((String) globalMap.get("<%=cid %>_xero_update_dt"));
+<%	
+										}//33
+										if ( javaType != JavaTypesManager.DATE ){//55
+%>
+											<%=successConnName%>.<%=column.getLabel()%> = (String) globalMap.get("<%=cid %>_xero_id");
+<%	
+										}//55
+										}//ifcustom
+									}//for
+								
+		               		}//success
+%>	
+	
+	
+<%    		
+			}//4
+    	}//3
+    }//2
+}//1
+%>

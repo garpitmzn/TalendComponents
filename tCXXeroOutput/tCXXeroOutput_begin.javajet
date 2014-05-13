@@ -32,4 +32,4 @@
 	Integer nb_line_<%=cid %> = 0;
 	globalMap.put("<%=cid %>_XML_REQUEST", "");
 	globalMap.put("<%=cid %>_RESPONSE_FROM_XERO","");
-	globalMap.put("<%=cid %>__XERO_RECORD_ID","");
+	globalMap.put("<%=cid %>__ERROR_MESSAGE","");
