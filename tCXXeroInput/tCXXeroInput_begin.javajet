@@ -123,7 +123,8 @@
 	net.oauth.client.OAuthClient client_<%=cid%> = new net.oauth.client.OAuthClient(new net.oauth.client.httpclient4.HttpClient4());
 	client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, <%=apiTimeout%>*1000);
 	client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, <%=apiTimeout%>*1000);
-
+	
+	try  {  //try
 	net.oauth.OAuthMessage response_<%=cid %> = client_<%=cid%>.invoke(request_<%=cid %>, net.oauth.ParameterStyle.AUTHORIZATION_HEADER);
   	inputstream_<%=cid %> = response_<%=cid %>.getBodyAsStream();
 	
@@ -131,7 +132,7 @@
  	doc_<%=cid %> = builder_<%=cid %>.parse(inputstream_<%=cid %>);
 	tf_<%=cid %>.transform(new javax.xml.transform.dom.DOMSource(doc_<%=cid %>), new javax.xml.transform.stream.StreamResult(out_<%=cid %>));
 	response_from_xero_msg_<%=cid%> = out_<%=cid %>.toString();
-	if ("1".equals(<%=debug%>)){
+	if (<%=debug%> == 1){
 		System.out.println(new Date()+"-INFO-Submitted http request - "+xero_apiurl_<%=cid %>);
 		System.out.println(new Date()+"-INFO-Response from Xero - "+response_from_xero_msg_<%=cid%>);
 	}
