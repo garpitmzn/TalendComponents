@@ -256,7 +256,6 @@
     tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
     tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
     java.io.Writer out_<%=cid %> = new java.io.StringWriter();
-    System.out.println(new Date()+"-INFO-Submitting http request - "+xero_apiurl_<%=cid %> +" with " + "<%=api_method %>" +" method");
     net.oauth.OAuthServiceProvider serviceProvider_<%=cid %> = new net.oauth.OAuthServiceProvider(null,null,null);
     net.oauth.OAuthConsumer consumer_<%=cid %> = new net.oauth.OAuthConsumer(null, xero_CONSUMER_KEY_<%=cid %>, null, serviceProvider_<%=cid %>);
     consumer_<%=cid %>.setProperty(net.oauth.signature.RSA_SHA1.PRIVATE_KEY, Xero_CONSUMER_PRIVATE_KEY_<%=cid %>);
@@ -300,7 +299,6 @@
     }//sizecheck       
  
         if (("ok").equals(sResponseReceived_<%=cid %>.toLowerCase())) {//responseok
-            System.out.println(new Date()+"-INFO- Response is OK");
             //nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
             if (doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").getLength() != 0){
                     globalMap.put("<%=cid %>_xero_id", doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").item(0).getTextContent());
@@ -383,8 +381,10 @@
 		               		}							   
 %>   
                  } catch (Exception e_<%=cid %>) { //try
+				 if (<%=debug%> == 1){
                     e_<%=cid %>.printStackTrace();
-                    String response_error_<%=cid %> = "NOT OK";
+                 }
+					String response_error_<%=cid %> = "NOT OK";
 					org.w3c.dom.Document doc_exp_<%=cid %> = null;
 					globalMap.put("<%=cid %>_RESPONSE_FROM_XERO", e_<%=cid %>.toString());
 					if (<%=debug%> == 1){
@@ -392,14 +392,39 @@
 						System.out.println(new Date()+"-INFO-Response from Xero - "+e_<%=cid %>.toString());
 					}					
 					//get xml from exception by fetching text from <ApiException> ...<\ApiException>
-					if ( e_<%=cid %>.toString().indexOf("<ApiException") != -1 && 
-							e_<%=cid %>.toString().indexOf("ApiException>") != -1 )
+					if ( e_<%=cid %>.toString().indexOf("<Message") != -1 
+						&& e_<%=cid %>.toString().indexOf("Message>") != -1 
+					)
 					{
-						response_error_<%=cid %> = e_<%=cid %>.toString().substring(e_<%=cid %>.toString().indexOf("<ApiException"), e_<%=cid %>.toString().indexOf("ApiException>")+13);
+						response_error_<%=cid %> = e_<%=cid %>.toString().substring(e_<%=cid %>.toString().indexOf("<Message"), e_<%=cid %>.toString().indexOf("Message>")+9);
+						System.out.println(response_error_<%=cid %>);
 						javax.xml.parsers.DocumentBuilder builder_exp_<%=cid %>;
 						builder_exp_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
 						doc_exp_<%=cid %> = builder_exp_<%=cid %>.parse(new java.io.StringBufferInputStream(response_error_<%=cid %>));
 					}
+					if (doc_exp_<%=cid %> != null) {//doc_if_null							
+						if (doc_exp_<%=cid %>.getElementsByTagName("Message").getLength() != 0){
+							globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_exp_<%=cid %>.getElementsByTagName("Message").item(0).getTextContent());
+						}
+					}//doc_if_null	
+					//get xml from exception by fetching text from <ErrorNumber> ...<\ApiException>
+					if ( e_<%=cid %>.toString().indexOf("<ErrorNumber") != -1 
+						&& e_<%=cid %>.toString().indexOf("ErrorNumber>") != -1 
+					)
+					{
+						response_error_<%=cid %> = e_<%=cid %>.toString().substring(e_<%=cid %>.toString().indexOf("<ErrorNumber"), e_<%=cid %>.toString().indexOf("ErrorNumber>")+12);
+						System.out.println(response_error_<%=cid %>);
+						javax.xml.parsers.DocumentBuilder builder_exp1_<%=cid %>;
+						builder_exp1_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+						doc_exp_<%=cid %> = builder_exp1_<%=cid %>.parse(new java.io.StringBufferInputStream(response_error_<%=cid %>));
+					}
+					if (doc_exp_<%=cid %> != null) {//doc_if_null							
+						if (doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").getLength() != 0){
+							globalMap.put("<%=cid %>_ERROR_CODE", doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").item(0).getTextContent());
+						}
+					}//doc_if_null					
+
+					
 <%              		
 					if(dieOnError){//dieonerror	
 %>
@@ -424,12 +449,6 @@
 	               			}
 %>
 					if (doc_exp_<%=cid %> != null) {//doc_if_null
-						if (doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").getLength() != 0){
-							globalMap.put("<%=cid %>_ERROR_CODE", doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").item(0).getTextContent());
-						}	
-						if (doc_exp_<%=cid %>.getElementsByTagName("Message").getLength() != 0){
-							globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_exp_<%=cid %>.getElementsByTagName("Message").item(0).getTextContent());
-						}
 							<%=rejectConnName%>.result_error_code = (String) globalMap.get("<%=cid %>_ERROR_CODE");
 	               			<%=rejectConnName%>.result_error_message = (String) globalMap.get("<%=cid %>_ERROR_MESSAGE");
 	               			<%=rejectConnName%>.result_errors =  (String) globalMap.get("<%=cid %>_ERROR_MESSAGE");					
