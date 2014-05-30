@@ -70,15 +70,6 @@
     String xmlParentNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));   
     String xmlChildNode = "";
     String xmlLastChildNode = "";
-    /*
-    if (modulenameallNode.indexOf(":") ==  modulenameallNode.lastIndexOf(":")) {
-        xmlFirstChildNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);   
-    }else {
-        xmlFirstChildNode = modulenameallNode.substring(modulenameallNode.indexOf(":")+1,modulenameallNode.lastIndexOf(":"));
-        xmlLastChildNode = modulenameallNode.substring(modulenameallNode.lastIndexOf(":")+1);
-        bprocessChildNode = true; //3rd level child
-    }
-    */
     boolean dieOnError = ("true").equals(ElementParameterParser.getValue(node,"__DIE_ON_ERROR__"));
 %>
     String inputxml_<%=cid %> = "";
@@ -384,20 +375,26 @@
 				 if (<%=debug%> == 1){
                     e_<%=cid %>.printStackTrace();
                  }
+				 String errorResponse_<%=cid %>  = e_<%=cid %>.toString();
 					String response_error_<%=cid %> = "NOT OK";
 					org.w3c.dom.Document doc_exp_<%=cid %> = null;
 					globalMap.put("<%=cid %>_RESPONSE_FROM_XERO", e_<%=cid %>.toString());
 					if (<%=debug%> == 1){
 						System.out.println(new Date()+"-INFO-Submitted xml request - "+inputxml_<%=cid %>);
 						System.out.println(new Date()+"-INFO-Response from Xero - "+e_<%=cid %>.toString());
+					}
+					if (e_<%=cid %> instanceof net.oauth.OAuthProblemException) {
+						net.oauth.OAuthProblemException oauthException_<%=cid %> = (net.oauth.OAuthProblemException) e_<%=cid %>;
+						if (oauthException_<%=cid %>.getParameters().containsKey("response-body")) {
+							errorResponse_<%=cid %> = (String) oauthException_<%=cid %>.getParameters().get("response-body");
+						}
 					}					
 					//get xml from exception by fetching text from <ApiException> ...<\ApiException>
-					if ( e_<%=cid %>.toString().indexOf("<Message") != -1 
-						&& e_<%=cid %>.toString().indexOf("Message>") != -1 
+					if ( errorResponse_<%=cid %>.indexOf("<ApiException") != -1 
+						&& errorResponse_<%=cid %>.indexOf("ApiException>") != -1 
 					)
 					{
-						response_error_<%=cid %> = e_<%=cid %>.toString().substring(e_<%=cid %>.toString().indexOf("<Message"), e_<%=cid %>.toString().indexOf("Message>")+9);
-						System.out.println(response_error_<%=cid %>);
+						response_error_<%=cid %> = errorResponse_<%=cid %>.substring(errorResponse_<%=cid %>.indexOf("<ApiException"), errorResponse_<%=cid %>.indexOf("ApiException>")+13);
 						javax.xml.parsers.DocumentBuilder builder_exp_<%=cid %>;
 						builder_exp_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
 						doc_exp_<%=cid %> = builder_exp_<%=cid %>.parse(new java.io.StringBufferInputStream(response_error_<%=cid %>));
@@ -406,25 +403,29 @@
 						if (doc_exp_<%=cid %>.getElementsByTagName("Message").getLength() != 0){
 							globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_exp_<%=cid %>.getElementsByTagName("Message").item(0).getTextContent());
 						}
-					}//doc_if_null	
-					//get xml from exception by fetching text from <ErrorNumber> ...<\ApiException>
-					if ( e_<%=cid %>.toString().indexOf("<ErrorNumber") != -1 
-						&& e_<%=cid %>.toString().indexOf("ErrorNumber>") != -1 
-					)
-					{
-						response_error_<%=cid %> = e_<%=cid %>.toString().substring(e_<%=cid %>.toString().indexOf("<ErrorNumber"), e_<%=cid %>.toString().indexOf("ErrorNumber>")+12);
-						System.out.println(response_error_<%=cid %>);
-						javax.xml.parsers.DocumentBuilder builder_exp1_<%=cid %>;
-						builder_exp1_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
-						doc_exp_<%=cid %> = builder_exp1_<%=cid %>.parse(new java.io.StringBufferInputStream(response_error_<%=cid %>));
-					}
-					if (doc_exp_<%=cid %> != null) {//doc_if_null							
 						if (doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").getLength() != 0){
 							globalMap.put("<%=cid %>_ERROR_CODE", doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").item(0).getTextContent());
 						}
-					}//doc_if_null					
-
-					
+						org.w3c.dom.NodeList nodeList_exp_schemacol_<%=cid %> = null;
+						org.w3c.dom.Node nNode_exp_<%=cid %> = null;
+						org.w3c.dom.Element eElement_exp_<%=cid %> = null;
+						nodeList_exp_schemacol_<%=cid %> = doc_exp_<%=cid %>.getElementsByTagName("Elements");
+						nNode_exp_<%=cid %> = nodeList_exp_schemacol_<%=cid %>.item(0);
+						eElement_exp_<%=cid %> = (org.w3c.dom.Element) nNode_exp_<%=cid %>;
+						String strTemp_error_<%=cid %> = "";						
+						if ( eElement_exp_<%=cid %> != null && eElement_exp_<%=cid %>.getElementsByTagName("Message").getLength() > 0 ) {// sizecheck
+							for (int j_<%=cid %> = 0; j_<%=cid %> < eElement_exp_<%=cid %>.getElementsByTagName("Message").getLength(); j_<%=cid %> ++)
+							{//for
+								if (eElement_exp_<%=cid %>.getElementsByTagName("Message").item(j_<%=cid %>).getTextContent().length() != 0
+								&& eElement_exp_<%=cid %>.getElementsByTagName("Message").item(j_<%=cid %>).getTextContent() != null
+								) 
+								{
+									strTemp_error_<%=cid %> += eElement_exp_<%=cid %>.getElementsByTagName("Message").item(j_<%=cid %>).getTextContent();
+								}
+							}//for
+							globalMap.put("<%=cid %>_ERROR_ERRORS", strTemp_error_<%=cid %>);
+						}//sizecheck
+					}//doc_if_null	
 <%              		
 					if(dieOnError){//dieonerror	
 %>
@@ -451,7 +452,7 @@
 					if (doc_exp_<%=cid %> != null) {//doc_if_null
 							<%=rejectConnName%>.result_error_code = (String) globalMap.get("<%=cid %>_ERROR_CODE");
 	               			<%=rejectConnName%>.result_error_message = (String) globalMap.get("<%=cid %>_ERROR_MESSAGE");
-	               			<%=rejectConnName%>.result_errors =  (String) globalMap.get("<%=cid %>_ERROR_MESSAGE");					
+	               			<%=rejectConnName%>.result_errors =  (String) globalMap.get("<%=cid %>_ERROR_ERRORS");					
 					}//doc_if_null	
 <%					
 					}//reject
