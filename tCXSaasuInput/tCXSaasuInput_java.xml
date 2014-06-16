@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<COMPONENT> 
+ <HEADER AUTHOR="Me" 
+   COMPATIBILITY="ALL" 
+   PLATEFORM="ALL" 
+   RELEASE_DATE="20110907A" 
+   SERIAL="" 
+   STARTABLE="true"
+   SCHEMA_AUTO_PROPAGATE="true"
+   STATUS="BETA" 
+   VERSION="0.1"> 
+   <SIGNATURE/> 
+  </HEADER> 
+  
+ <FAMILIES> 
+  <FAMILY>Cloutex Integarations/Saasu</FAMILY>
+ </FAMILIES>
+  
+ <DOCUMENTATION> 
+   <URL/> 
+  </DOCUMENTATION>
+   
+  <CONNECTORS>
+    <CONNECTOR CTYPE="FLOW" MAX_INPUT="0" MAX_OUTPUT="1"/>
+    <CONNECTOR CTYPE="ITERATE" MAX_OUTPUT="1" MAX_INPUT="1"/>
+    <CONNECTOR CTYPE="SUBJOB_OK" MAX_INPUT="1" />
+    <CONNECTOR CTYPE="SUBJOB_ERROR" MAX_INPUT="1" />
+    <CONNECTOR CTYPE="COMPONENT_OK"/>
+    <CONNECTOR CTYPE="COMPONENT_ERROR"/>
+    <CONNECTOR CTYPE="RUN_IF"/>
+  </CONNECTORS>
+  
+   <PARAMETERS>
+     <PARAMETER NAME="SAASUAPIURL" FIELD="TEXT" NUM_ROW="10"  REQUIRED="true" >
+      <DEFAULT>"https://secure.saasu.com/webservices/rest/r1"</DEFAULT>
+    </PARAMETER>
+        <PARAMETER NAME="FILEID" FIELD="TEXT" NUM_ROW="20" REQUIRED="true">
+      <DEFAULT>"50343"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="WEBSERVICESACCESSKEY" FIELD="TEXT" NUM_ROW="30" REQUIRED="true" >
+      <DEFAULT>"580831417343475C95AB01FE5F29BEF1"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="UTCLASTMODIFIEDFROM" FIELD="TEXT" NUM_ROW="40" REQUIRED="true" >
+      <DEFAULT>"YYYY-MM-DDTHH24:MI:SS"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="UTCLASTMODIFIEDTO" FIELD="TEXT" NUM_ROW="40" REQUIRED="true" >
+      <DEFAULT>"YYYY-MM-DDTHH24:MI:SS"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="MODULENAME" FIELD="CLOSED_LIST" NUM_ROW="60" REQUIRED="true">
+	<ITEMS DEFAULT="Contacts">
+		<ITEM NAME="Contacts"   VALUE="contactList:Contacts" />
+		<ITEM NAME="DeletedContacts"   VALUE="deletedEntityList:DeletedContacts" />
+	</ITEMS>
+    </PARAMETER>
+    
+  	 <PARAMETER NAME="SCHEMA" FIELD="SCHEMA_TYPE" NUM_ROW="70" REQUIRED="true">
+  	   <TABLE IF="MODULENAME=='Contacts'">
+         <COLUMN KEY="true"  NAME="contactUid" NULLABLE="false" TYPE="id_Integer"/>
+         <COLUMN KEY="false" LENGTH="128" NAME="utcFirstCreated" NULLABLE="true" TYPE="id_Date" PATTERN="&quot;yyyy-MM-dd HH:mm:ss&quot;"/>
+         <COLUMN KEY="false" NAME="utcLastModified" NULLABLE="true" TYPE="id_Date" PATTERN="&quot;yyyy-MM-dd HH:mm:ss&quot;"/>         
+         <COLUMN KEY="false" NAME="lastUpdatedUid" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" LENGTH="5" NAME="salutation" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="givenName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="3" NAME="middleInitials" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="familyName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" NAME="dateOfBirth" NULLABLE="true" TYPE="id_Date" PATTERN="&quot;yyyy-MM-dd HH:mm:ss&quot;"/>
+		 <COLUMN KEY="false" LENGTH="75" NAME="organisation" NULLABLE="true" TYPE="id_String"/>		 
+		 <COLUMN KEY="false" LENGTH="75" NAME="organisationName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="11" NAME="organisationAbn" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="11" NAME="abn" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="128" NAME="companyEmail" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="1024" NAME="organisationWebsite" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="75" NAME="organisationPosition" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="1024" NAME="websiteUrl" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="128" NAME="emailAddress" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="mainPhone" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="homePhone" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="mobilePhone" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="otherPhone" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="fax" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="contactID" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="256" NAME="street" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="city" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="state" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="12" NAME="postCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="country" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="256" NAME="otherStreet" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="otherCity" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="otherState" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="12" NAME="otherPostCode" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="otherCountry" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" DEFAULT="true" NAME="isActive" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false" NAME="acceptDirectDeposit" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false" LENGTH="75" NAME="directDepositAccountName" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="6" NAME="directDepositAccountBsb" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="20" NAME="directDepositAccountNumber" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" NAME="acceptCheque" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false" LENGTH="75" NAME="chequePayableTo" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" NAME="tags" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="customField1" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="50" NAME="customField2" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="twitterID" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" LENGTH="100" NAME="skypeID" NULLABLE="true" TYPE="id_String"/>
+		 <COLUMN KEY="false" NAME="autoSendStatement" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false" NAME="isPartner" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false" NAME="isCustomer" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false" NAME="isSupplier" NULLABLE="true" TYPE="id_Boolean"/>
+		 <COLUMN KEY="false"  NAME="contactManagerUid" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="saleTradingTermsType" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="saleTradingTermsPaymentDueInInterval" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="saleTradingTermsPaymentDueInIntervalType" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="purchaseTradingTermsType" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="purchaseTradingTermsPaymentDueInInterval" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="purchaseTradingTermsPaymentDueInIntervalType" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="defaultSaleDiscount" NULLABLE="true" TYPE="id_Float"/>
+		 <COLUMN KEY="false" NAME="defaultPurchaseDiscount" NULLABLE="true" TYPE="id_Float"/>
+	  </TABLE>
+  	   <TABLE IF="MODULENAME=='DeletedContacts'">
+         <COLUMN KEY="false"  NAME="entityTypeUid" NULLABLE="false" TYPE="id_String"/>
+         <COLUMN KEY="false" NAME="entityUid" NULLABLE="true" TYPE="id_Integer"/>
+		 <COLUMN KEY="false" NAME="user" NULLABLE="true" TYPE="id_String"/>
+         <COLUMN KEY="false" NAME="timestamp" NULLABLE="true" TYPE="id_Date" PATTERN="&quot;yyyy-MM-dd HH:mm:ss&quot;"/>         
+	  </TABLE>	  	  
+  	 </PARAMETER>
+	<PARAMETER NAME="FILTER_INPUT" FIELD="TABLE" NUM_ROW="80" NB_LINES="4">
+      <ITEMS>
+        <ITEM NAME="FILTER_COLUMN" FIELD="COLUMN_LIST" />
+        <ITEM NAME="FILTER_VALUE" FIELD="String" VALUE='""' />
+      </ITEMS>
+    </PARAMETER>  	  
+   </PARAMETERS>
+   
+  <ADVANCED_PARAMETERS>
+	<PARAMETER NAME="DIE_ON_ERROR" FIELD="CHECK" NUM_ROW="10" DYNAMIC_SETTINGS="true">
+		<DEFAULT>false</DEFAULT>
+	</PARAMETER>
+  	<PARAMETER NAME="DEBUG" FIELD="id_Integer" NUM_ROW="20">
+		<DEFAULT>0</DEFAULT>
+	</PARAMETER>
+	<PARAMETER NAME="API_TIMEOUT" FIELD="id_Integer" NUM_ROW="30">
+		<DEFAULT>30</DEFAULT>
+	</PARAMETER>
+  </ADVANCED_PARAMETERS>
+   
+  <CODEGENERATION>
+  	<IMPORTS> 
+		    <!-- jersey library for a REST client -->
+			<IMPORT NAME="jersey_client" MODULE="jersey-client-1.4.jar" UrlPath="platform:/plugin/org.talend.libraries.jersey/lib/jersey-client-1.4.jar" REQUIRED="true" />
+			<IMPORT NAME="jersey_core" MODULE="jersey-core-1.4.jar" UrlPath="platform:/plugin/org.talend.libraries.jersey/lib/jersey-core-1.4.jar" REQUIRED="true" />
+			<!-- for JSON support in jersey -->
+			<IMPORT NAME="jettison" MODULE="jettison-1.3.4.jar" UrlPath="platform:/plugin/org.talend.libraries.esb/lib/jettison-1.3.4.jar" REQUIRED="true" />
+			<IMPORT NAME="jersey_json" MODULE="jersey-json-1.4.jar"  REQUIRED="true" />
+			<IMPORT NAME="commons-logging" MODULE="commons-logging-1.1.1.jar" UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-logging-1.1.jar" REQUIRED="true" /> 			
+    </IMPORTS>    
+  </CODEGENERATION>
+  
+    <RETURNS> 
+    <RETURN AVAILABILITY="AFTER" NAME="NB_LINE" TYPE="id_Integer"/>
+		<RETURN NAME="HTTP_REQUEST" TYPE="id_String" AVAILABILITY="AFTER"/>
+		<RETURN NAME="RESPONSE_FROM_SAASU" TYPE="id_String" AVAILABILITY="AFTER"/>
+		<RETURN AVAILABILITY="AFTER" NAME="ERROR_CODE" TYPE="id_String"/>
+		<RETURN AVAILABILITY="AFTER" NAME="ERROR_MESSAGE" TYPE="id_String"/>
+		<RETURN AVAILABILITY="AFTER" NAME="ERROR_ERRORS" TYPE="id_String"/>
+   </RETURNS> 
+   
+ </COMPONENT>

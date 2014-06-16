@@ -1,0 +1,142 @@
+<%@ jet
+		imports="
+		org.talend.core.model.process.INode
+		org.talend.core.model.process.ElementParameterParser
+		org.talend.core.model.metadata.IMetadataTable
+		org.talend.core.model.metadata.IMetadataColumn
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.EConnectionType
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List
+		java.util.HashMap
+		java.util.Map
+		java.util.ArrayList
+		"
+%>
+<%
+		CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+		INode node = (INode)codeGenArgument.getArgument();
+		String cid = node.getUniqueName();
+		String saasu_apiurl = ElementParameterParser.getValue(node, "__SAASUAPIURL__");
+		String module_name = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));
+		String saasu_file_id = ElementParameterParser.getValue(node, "__FILEID__");
+		String saasu_web_service_access_key = ElementParameterParser.getValue(node, "__WEBSERVICESACCESSKEY__");
+		String debug = ElementParameterParser.getValue(node, "__DEBUG__");
+		String apiTimeout = ElementParameterParser.getValue(node, "__API_TIMEOUT__");
+		String strutcLastModifiedFrom = ElementParameterParser.getValue(node, "__UTCLASTMODIFIEDFROM__");
+		String strutcLastModifiedTo = ElementParameterParser.getValue(node, "__UTCLASTMODIFIEDTO__");
+		List<Map<String, String>> filter_input_list = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__FILTER_INPUT__");
+		int size_filter_input_list = filter_input_list.size();
+		final String dieOnError = ElementParameterParser.getValue(node, "__DIE_ON_ERROR__");
+%>
+int nb_line_<%=cid %> = 0;
+java.io.InputStream inputstream_<%=cid %>;
+org.w3c.dom.Document doc_<%=cid %>;
+javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+java.io.Writer out_<%=cid %> = new java.io.StringWriter();
+String strAttributeValueIfFound_<%=cid %> = "";
+String str_saasu_apiurl_filter_<%=cid %> = "";
+Boolean IsFilterBycontactUid_<%=cid %> = false;
+String strcontactUid_<%=cid %> = "";
+String saasu_apiurl_<%=cid%> = <%=saasu_apiurl%>;
+saasu_apiurl_<%=cid %> += "/";
+<%
+		for(int g = 0; g < size_filter_input_list; g++){ //for-size_filter_input
+			Map<String, String> filter_input_listmap = filter_input_list.get(g);
+			String inputColumn = filter_input_listmap.get("FILTER_COLUMN");
+			String inputValue = filter_input_listmap.get("FILTER_VALUE");
+%>
+			str_saasu_apiurl_filter_<%=cid %> += "&" + "<%=inputColumn%>=";
+			str_saasu_apiurl_filter_<%=cid %> += <%=inputValue%> ;
+			//check for contactuid filter
+			if ("<%=inputColumn%>".equals("contactUid")){
+						IsFilterBycontactUid_<%=cid %> = true;
+						strcontactUid_<%=cid %> = <%=inputValue%>;
+			}
+<%
+		}//for-size_filter_input
+%>
+	if ( IsFilterBycontactUid_<%=cid %> == true ) {
+				saasu_apiurl_<%=cid %> += "contact";
+	} else {
+				saasu_apiurl_<%=cid %> += "<%=module_name%>";
+	}                    
+
+	if ( !<%=saasu_web_service_access_key%>.equals("") && !<%=saasu_web_service_access_key%>.equals("null"))
+							saasu_apiurl_<%=cid %> += "?WSAccessKey="+<%=saasu_web_service_access_key%>;
+	if ( !<%=saasu_file_id%>.equals("") && !<%=saasu_file_id%>.equals("null"))
+							saasu_apiurl_<%=cid %> += "&FileUid="+<%=saasu_file_id%>;
+	if ( !("").equals(str_saasu_apiurl_filter_<%=cid %>) && str_saasu_apiurl_filter_<%=cid %> != null )
+	{
+				if ( IsFilterBycontactUid_<%=cid %> == false ){
+							saasu_apiurl_<%=cid %> += str_saasu_apiurl_filter_<%=cid %>;
+				} else {
+							saasu_apiurl_<%=cid %> += "&uid="+strcontactUid_<%=cid %>;
+				}
+	}
+	if ( IsFilterBycontactUid_<%=cid %> == false 
+		&& !<%=strutcLastModifiedFrom %>.equals("") && <%=strutcLastModifiedFrom %> != null 
+		&& !<%=strutcLastModifiedTo %>.equals("") && <%=strutcLastModifiedTo %> != null
+		&& !<%=strutcLastModifiedFrom %>.equals("YYYY-MM-DDTHH24:MI:SS") 
+		&& !<%=strutcLastModifiedTo %>.equals("YYYY-MM-DDTHH24:MI:SS")
+		) 
+	{
+			saasu_apiurl_<%=cid %> += "&utcLastModifiedFrom="+<%=strutcLastModifiedFrom	%>;
+			saasu_apiurl_<%=cid %> += "&utcLastModifiedTo="+<%=strutcLastModifiedTo %>;
+	}
+
+	if( "<%=module_name%>".equals("DeletedEntityList") )
+	{
+        saasu_apiurl_<%=cid %> += "&EntityTypeUid=10";
+	}                     
+	
+	try  {  //try
+            globalMap.put("<%=cid %>_HTTP_REQUEST", saasu_apiurl_<%=cid %>);
+            com.sun.jersey.api.client.Client client_<%=cid%> = com.sun.jersey.api.client.Client.create();
+            client_<%=cid%>.setConnectTimeout(<%=apiTimeout%> * 1000);
+            client_<%=cid%>.setReadTimeout(<%=apiTimeout%> * 1000);
+            client_<%=cid%>.setFollowRedirects(true);
+            if ("1".equals(<%=debug%>))
+				client_<%=cid%>.addFilter(new com.sun.jersey.api.client.filter.LoggingFilter(System.out));
+				
+			com.sun.jersey.api.client.WebResource resource_<%=cid%> = client_<%=cid%>.resource(saasu_apiurl_<%=cid %>);
+			com.sun.jersey.api.client.ClientResponse response_<%=cid%> = resource_<%=cid%>.accept(javax.ws.rs.core.MediaType.APPLICATION_XML)
+                                                                        .type(javax.ws.rs.core.MediaType.APPLICATION_XML)
+                                                                        .get(com.sun.jersey.api.client.ClientResponse.class);
+            if (<%=debug%> == 1){
+				System.out.println(new Date()+"-INFO-Submitted http request - "+saasu_apiurl_<%=cid %>);
+				System.out.println(new Date()+"-INFO-Response from Saasu - "+response_<%=cid%>);
+            }
+			globalMap.put("<%=cid %>_RESPONSE_FROM_SAASU",response_<%=cid%>);
+			
+		if(response_<%=cid%>.getStatus() == 200)
+		{//responseok		
+            String output_<%=cid%> = response_<%=cid%>.getEntity(String.class);
+			builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			doc_<%=cid %> = builder_<%=cid %>.parse(new org.xml.sax.InputSource( new java.io.StringReader( output_<%=cid%> ) ));
+            if (doc_<%=cid %> != null){ //doc_if_null
+			//In case of error message xml			
+			if (doc_<%=cid %>.getElementsByTagName("errors").getLength() != 0){ //error
+				if (doc_<%=cid %>.getElementsByTagName("type").getLength() != 0){
+					globalMap.put("<%=cid %>_ERROR_CODE", doc_<%=cid %>.getElementsByTagName("type").item(0).getTextContent());				
+				}	
+				if (doc_<%=cid %>.getElementsByTagName("message").getLength() != 0){
+					globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_<%=cid %>.getElementsByTagName("message").item(0).getTextContent());				
+				}					
+			} else
+			{//error
+					org.w3c.dom.NodeList nList_<%=cid %> = null;
+					if ( IsFilterBycontactUid_<%=cid %> == true ) {
+								nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("contactResponse");
+					}  else {
+								nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=module_name%>Item");
+					}
+					for (int i_<%=cid %> = 0; i_<%=cid %> < nList_<%=cid %>.getLength(); i_<%=cid %>++) 
+					{//parentfor
+						org.w3c.dom.Node nNode_<%=cid %> = nList_<%=cid %>.item(i_<%=cid %>);
+						if (nNode_<%=cid %>.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) 
+						{//doc3
+							org.w3c.dom.Element eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
