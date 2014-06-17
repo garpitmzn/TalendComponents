@@ -1,0 +1,467 @@
+<%@ jet
+    imports="
+    org.talend.core.model.process.INode
+    org.talend.core.model.process.ElementParameterParser
+    org.talend.core.model.metadata.IMetadataTable
+    org.talend.core.model.metadata.IMetadataColumn
+    org.talend.core.model.process.IConnection
+    org.talend.core.model.process.IConnectionCategory
+    org.talend.designer.codegen.config.CodeGeneratorArgument
+    org.talend.core.model.process.EConnectionType
+    org.talend.core.model.metadata.types.JavaTypesManager
+    org.talend.core.model.metadata.types.JavaType
+    java.util.List
+    java.util.Map           
+    "
+%>
+<%
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    String connName = null;
+
+    if (node.getIncomingConnections().size() == 1) {
+      IConnection conn = node.getIncomingConnections().get(0);
+      connName = conn.getName();
+    }
+    //SUCCESS connection
+    String successConnName = null;
+    List<? extends IConnection> successConns = node.getOutgoingConnections("SUCCESS");
+    if(successConns != null && successConns.size() > 0) {
+        IConnection successConn = successConns.get(0);
+        successConnName = successConn.getName();
+    }
+   
+    List<IMetadataColumn> successColumnList = null;
+    IMetadataTable metadataTable2 = node.getMetadataFromConnector("SUCCESS");
+    if(metadataTable2 != null) {
+        successColumnList = metadataTable2.getListColumns();     
+    }
+   	
+	//REJECT connection
+	String rejectConnName = null;
+	List<? extends IConnection> rejectConns = node.getOutgoingConnections("REJECT");
+	if(rejectConns != null && rejectConns.size() > 0) {
+		IConnection rejectConn = rejectConns.get(0);
+	    rejectConnName = rejectConn.getName();
+	}
+	
+	List<IMetadataColumn> rejectColumnList = null;
+	IMetadataTable metadataTable = node.getMetadataFromConnector("REJECT");
+	if(metadataTable != null) {
+	    rejectColumnList = metadataTable.getListColumns();      
+	}
+	
+   
+    String modulelabel;
+    String xero_CONSUMER_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_KEY__");
+    String Xero_CONSUMER_PK_KEY = ElementParameterParser.getValue(node, "__Xero_CONSUMER_PK_KEY__");
+    Boolean bprocessChild = false;
+    final String debug = ElementParameterParser.getValue(node, "__DEBUG__");   
+    final String apiTimeout = ElementParameterParser.getValue(node, "__API_TIMEOUT__");   
+    String xero_apiurl = ElementParameterParser.getValue(node, "__XeroAPIURL__");
+    String api_method = ElementParameterParser.getValue(node, "__APIMETHOD__");
+    String modulenameallNode = ElementParameterParser.getValue(node, "__MODULENAME__");
+    String modulenameall = ElementParameterParser.getValue(node, "__MODULENAME__");
+    String modulename = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));   
+    String xmlFirstChildNode;
+    String strColumnNameLabel;
+    String xmlRootNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);
+    String xmlParentNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));   
+    String xmlChildNode = "";
+    String xmlLastChildNode = "";
+    boolean dieOnError = ("true").equals(ElementParameterParser.getValue(node,"__DIE_ON_ERROR__"));
+%>
+    String inputxml_<%=cid %> = "";
+    String response_from_xero_msg_<%=cid%> = "";
+    String response_error_code_<%=cid%> = "";
+    String inputxml_BatchPayments_<%=cid %> = "";
+    String inputxml_Address_POBOX_<%=cid %> = "<Address>" + "\n";
+    inputxml_Address_POBOX_<%=cid %> += "<AddressType>POBOX</AddressType>" + "\n";
+    String inputxml_Address_STREET_<%=cid %> = "<Address>" + "\n";
+    inputxml_Address_STREET_<%=cid %> += "<AddressType>STREET</AddressType>" + "\n";
+    String inputxml_Phone_DEFAULT_<%=cid %> = "<Phone>" + "\n";
+    inputxml_Phone_DEFAULT_<%=cid %> += "<PhoneType>DEFAULT</PhoneType>" + "\n";
+    String inputxml_Phone_DDI_<%=cid %> = "<Phone>" + "\n";
+    inputxml_Phone_DDI_<%=cid %> += "<PhoneType>DDI</PhoneType>" + "\n";
+    String inputxml_Phone_FAX_<%=cid %> = "<Phone>" + "\n";
+    inputxml_Phone_FAX_<%=cid %> += "<PhoneType>FAX</PhoneType>" + "\n";
+    String inputxml_Phone_MOBILE_<%=cid %> = "<Phone>" + "\n";
+    inputxml_Phone_MOBILE_<%=cid %> += "<PhoneType>MOBILE</PhoneType>" + "\n";
+    String inputxml_Bills_<%=cid %> = "";
+    String inputxml_Sales_<%=cid %> = "";
+    inputxml_<%=cid %> += "<?xml version='1.0' encoding='utf-8' ?>"+"\n";
+    inputxml_<%=cid %> += "<" + "<%=xmlRootNode %>" + ">" + "\n";
+    inputxml_<%=cid %> += "<" + "<%=xmlParentNode %>" + ">" + "\n";
+   
+    String xero_CONSUMER_KEY_<%=cid %> = <%=xero_CONSUMER_KEY %>;
+    String Xero_CONSUMER_PRIVATE_KEY_<%=cid %> = <%=Xero_CONSUMER_PK_KEY %>;       
+<%
+    List<IMetadataTable> metadatas = node.getMetadataList();
+    if ((metadatas!=null)&&(metadatas.size()>0)) {//1
+        IMetadataTable metadata = metadatas.get(0);
+        if (metadata!=null) {//2
+            List< ? extends IConnection> conns = node.getIncomingConnections();
+            for (IConnection conn : conns) {//3
+                if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {//4               
+                    List<IMetadataColumn> columns = metadata.getListColumns();
+                    int sizeColumns = columns.size();
+                    for (int i = 0; i < sizeColumns; i++) {//5
+                        IMetadataColumn column = columns.get(i);
+                        JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+                        boolean isPrimitive = JavaTypesManager.isJavaPrimitiveType( javaType, column.isNullable());
+                        if (column.getLabel().indexOf("_") >= 0) { //column.getLabel().indexOf("_")
+                            strColumnNameLabel = column.getLabel().substring(column.getLabel().indexOf("_")+1);
+                        }else{
+                            strColumnNameLabel = column.getLabel();
+                        }//column.getLabel().indexOf("_")
+                                   
+%>
+    <%if( !isPrimitive ) {    //prim
+    %>
+    if(<%=conn.getName() %>.<%=column.getLabel() %> != null) { //nullcheck
+    <%
+        }
+        else{//prim
+    %>
+    if(!"".equals(String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>))) { //nullcheck
+    <%   
+        }//prim
+    %>
+        <%
+            if ( column.getLabel().contains("Postal_")) {
+        %>
+            inputxml_Address_POBOX_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Address_POBOX_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Address_POBOX_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+        <%       
+            }
+        if ( column.getLabel().contains("Street_")) {
+        %>
+            inputxml_Address_STREET_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Address_STREET_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Address_STREET_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("Default_Phone")) {
+        %>
+            inputxml_Phone_DEFAULT_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Phone_DEFAULT_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Phone_DEFAULT_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("DirectDial_Phone")) {
+        %>
+            inputxml_Phone_DDI_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Phone_DDI_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Phone_DDI_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("Fax_Phone")) {
+        %>
+            inputxml_Phone_FAX_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Phone_FAX_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Phone_FAX_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("Mobile_Phone")) {
+        %>
+            inputxml_Phone_MOBILE_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Phone_MOBILE_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Phone_MOBILE_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("BatchPayments_")) {
+        %>
+            inputxml_BatchPayments_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_BatchPayments_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_BatchPayments_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("Bills_")) {
+        %>
+            inputxml_Bills_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Bills_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Bills_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if ( column.getLabel().contains("Sales_")) {
+        %>
+            inputxml_Sales_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+            inputxml_Sales_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_Sales_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";           
+        <%       
+            }
+        if (
+            !column.getLabel().contains("Postal_") &&
+            !column.getLabel().contains("Street_") &&
+            !column.getLabel().contains("Default_Phone") &&
+            !column.getLabel().contains("DirectDial_Phone") &&
+            !column.getLabel().contains("Mobile_Phone") &&
+            !column.getLabel().contains("Fax_Phone")    &&
+            !column.getLabel().contains("BatchPayments_")&&
+            !column.getLabel().contains("Bills_") &&
+            !column.getLabel().contains("Sales_")
+        ) {
+        %>
+            inputxml_<%=cid %> += "<" + "<%=column.getLabel()%>" + ">";   
+            inputxml_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+            inputxml_<%=cid %> += "</" + "<%=column.getLabel()%>" + ">" + "\n";
+        <%       
+            }
+        %>
+    }//nullcheck
+<%
+                }//5
+%>
+    inputxml_<%=cid %> += "<Addresses>" + "\n" + inputxml_Address_POBOX_<%=cid %>  + "</Address>" + "\n";
+    inputxml_<%=cid %> += inputxml_Address_STREET_<%=cid %> + "</Address>" + "\n" + "</Addresses>" + "\n";
+    inputxml_<%=cid %> += "<Phones>"  + "\n" + inputxml_Phone_DEFAULT_<%=cid %>  + "</Phone>" + "\n";
+    inputxml_<%=cid %> += inputxml_Phone_DDI_<%=cid %> + "</Phone>" + "\n";
+    inputxml_<%=cid %> += inputxml_Phone_FAX_<%=cid %> + "</Phone>" + "\n";
+    inputxml_<%=cid %> += inputxml_Phone_MOBILE_<%=cid %> + "</Phone>" + "\n" + "</Phones>" + "\n";
+    inputxml_<%=cid %> += "<BatchPayments>" + "\n" + inputxml_BatchPayments_<%=cid %> + "</BatchPayments>" + "\n";
+    inputxml_<%=cid %> += "<PaymentTerms>" + "\n";
+    inputxml_<%=cid %> += "<Bills>" + "\n" + inputxml_Bills_<%=cid %> +  "</Bills>"  + "\n";
+    inputxml_<%=cid %> += "<Sales>" + "\n" + inputxml_Sales_<%=cid %> +  "</Sales>"  + "\n";
+    inputxml_<%=cid %> += "</PaymentTerms>" + "\n";   
+   
+    inputxml_<%=cid %> += "</" + "<%=xmlParentNode %>" + ">" + "\n";
+    inputxml_<%=cid %> += "</" + "<%=xmlRootNode %>" + ">";       
+    globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
+    org.apache.http.client.methods.HttpPost request_<%=cid %>;
+    java.io.InputStream inputstream_<%=cid %>;
+    org.w3c.dom.Document doc_<%=cid %>;
+    String sResponseReceived_<%=cid %> = "";
+    javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+    org.w3c.dom.NodeList nodeList_schemacol_<%=cid %>;
+    org.w3c.dom.NodeList nodeList_schemacol_child_<%=cid %>;
+    org.w3c.dom.Node nNode_child_<%=cid %>;
+    org.w3c.dom.Element eElement_child_<%=cid %>;
+    org.w3c.dom.NodeList nodeList_child_<%=cid %>;
+    String strAttributeValueIfFound_<%=cid %> = "";
+    String xero_apiurl_<%=cid %> = <%=xero_apiurl %>;
+    xero_apiurl_<%=cid %> += "/<%=modulename %>";
+    org.w3c.dom.Element eElement_<%=cid %>  = null;
+    javax.xml.transform.Transformer tf_<%=cid %> = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+    tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8");
+    tf_<%=cid %>.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+    java.io.Writer out_<%=cid %> = new java.io.StringWriter();
+    net.oauth.OAuthServiceProvider serviceProvider_<%=cid %> = new net.oauth.OAuthServiceProvider(null,null,null);
+    net.oauth.OAuthConsumer consumer_<%=cid %> = new net.oauth.OAuthConsumer(null, xero_CONSUMER_KEY_<%=cid %>, null, serviceProvider_<%=cid %>);
+    consumer_<%=cid %>.setProperty(net.oauth.signature.RSA_SHA1.PRIVATE_KEY, Xero_CONSUMER_PRIVATE_KEY_<%=cid %>);
+    consumer_<%=cid %>.setProperty(net.oauth.OAuth.OAUTH_SIGNATURE_METHOD, net.oauth.OAuth.RSA_SHA1);
+    net.oauth.OAuthAccessor accessor_<%=cid %> = new net.oauth.OAuthAccessor(consumer_<%=cid %>);
+   
+    net.oauth.client.OAuthClient client_<%=cid %> = new net.oauth.client.OAuthClient(new net.oauth.client.httpclient4.HttpClient4());
+    client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, <%=apiTimeout%>*1000);
+    client_<%=cid%>.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, <%=apiTimeout%>*1000);   
+    accessor_<%=cid %>.accessToken = xero_CONSUMER_KEY_<%=cid %>;
+   
+    try    { //try
+    net.oauth.OAuthMessage response_<%=cid %> = client_<%=cid %>.invoke(accessor_<%=cid %>,  net.oauth.OAuthMessage.<%=api_method %>, xero_apiurl_<%=cid %>,
+        net.oauth.OAuth.newList("xml", inputxml_<%=cid %>));
+      inputstream_<%=cid %> = response_<%=cid %>.getBodyAsStream();
+    builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+     doc_<%=cid %> = builder_<%=cid %>.parse(inputstream_<%=cid %>);
+    tf_<%=cid %>.transform(new javax.xml.transform.dom.DOMSource(doc_<%=cid %>), new javax.xml.transform.stream.StreamResult(out_<%=cid %>));
+    response_from_xero_msg_<%=cid%> = out_<%=cid %>.toString();
+    globalMap.put("<%=cid %>_RESPONSE_FROM_XERO",response_from_xero_msg_<%=cid%>);
+    if (<%=debug%> == 1){
+        System.out.println(new Date()+"-INFO-Submitted xml request - "+inputxml_<%=cid %>);
+        System.out.println(new Date()+"-INFO-Response from Xero - "+response_from_xero_msg_<%=cid%>);
+    }
+   
+    if (doc_<%=cid %> != null) {//doc_if_null
+        org.w3c.dom.NodeList nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("Response");
+        org.w3c.dom.Node nNode_<%=cid %> = nList_<%=cid %>.item(0);
+        eElement_<%=cid %> = (org.w3c.dom.Element) nNode_<%=cid %>;
+        nodeList_schemacol_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("Status");
+    if (nodeList_schemacol_<%=cid %>.getLength() > 0) {// sizecheck
+        if (eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent()
+            != null && eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent().length() != 0) {// nullcheck
+            sResponseReceived_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("Status").item(0).getTextContent();
+        }// nullcheck
+        else {
+            sResponseReceived_<%=cid %> = "NOT OK";
+            globalMap.put("<%=cid %>_ERROR_MESSAGE",response_from_xero_msg_<%=cid%>);
+            globalMap.put("<%=cid %>_ERROR_ERRORS",response_from_xero_msg_<%=cid%>);
+        }
+    }//sizecheck       
+ 
+        if (("ok").equals(sResponseReceived_<%=cid %>.toLowerCase())) {//responseok
+            //nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=modulename%>");
+            if (doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").getLength() != 0){
+                    globalMap.put("<%=cid %>_xero_id", doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode %>ID").item(0).getTextContent());
+                }
+            if (doc_<%=cid %>.getElementsByTagName("UpdatedDateUTC").getLength() != 0){
+                    globalMap.put("<%=cid %>_xero_create_dt", doc_<%=cid %>.getElementsByTagName("UpdatedDateUTC").item(0).getTextContent());
+                }
+            if (doc_<%=cid %>.getElementsByTagName("DateTimeUTC").getLength() != 0){
+                    globalMap.put("<%=cid %>_xero_update_dt", doc_<%=cid %>.getElementsByTagName("DateTimeUTC").item(0).getTextContent());
+                }
+					nb_line_<%=cid %>++;
+
+        }    //responseok
+    else
+    {
+        globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);   
+        System.err.println(new Date()+ "-ERROR: Error message is : " + response_from_xero_msg_<%=cid%>);       
+        <%
+                if ( dieOnError ) {
+        %>
+            throw new RuntimeException(new Date()+ "-ERROR - Xero api() returned error in response");
+        <%
+            }//dieonerror
+        %>       
+    }//responseok
+    }//doc_if_null
+    else
+    {
+        globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);                
+        System.err.println(new Date()+ "-ERROR: Error message is : " + response_from_xero_msg_<%=cid%>);       
+        <%
+                if ( dieOnError ) {
+        %>
+            throw new RuntimeException(new Date()+ "-ERROR - Xero api() returned error in response");
+        <%
+            }//dieonerror
+        %>
+    }//doc_if_null
+
+<%
+                               //successful, propagate columns, add ID
+                               if(  successConnName!=null && !successConnName.trim().equals("") && successColumnList!=null ){//success
+%>
+                                   <%=successConnName%> = new <%=successConnName%>Struct();
+<%
+                                   for(IMetadataColumn column : columns) { //for
+%>
+                                       <%=successConnName%>.<%=column.getLabel()%> = <%=conn.getName()%>.<%=column.getLabel()%>;
+<%
+                                }//for        
+                                //below code is for custom id, created_dt, updated_dt columns
+                                   for (IMetadataColumn column: successColumnList) {//for
+                                       JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+                                    String pattern = column.getPattern() == null || column.getPattern().trim().length() == 0 ? null : column.getPattern();                               
+                                    if (column.isCustom()) {//ifcustom
+                                        if (column.getLabel().equals("created_at")){//33
+%>
+                                            <%=successConnName%>.<%=column.getLabel()%> = FastDateParser.getInstance(<%=pattern%>).parse((String) globalMap.get("<%=cid %>_xero_create_dt"));
+<%   
+                                        }//33
+                                        if (column.getLabel().equals("updated_at")){//33
+%>
+                                            <%=successConnName%>.<%=column.getLabel()%> = FastDateParser.getInstance(<%=pattern%>).parse((String) globalMap.get("<%=cid %>_xero_update_dt"));
+<%   
+                                        }//33
+                                        if ( javaType != JavaTypesManager.DATE ){//55
+%>
+                                            <%=successConnName%>.<%=column.getLabel()%> = (String) globalMap.get("<%=cid %>_xero_id");
+<%   
+                                        }//55
+                                        }//ifcustom
+                                    }//for
+                               
+                               }//success
+		               		//row is not rejected
+		               		if( rejectConnName!=null && !rejectConnName.trim().equals("") ){
+%>
+		               				<%=rejectConnName%> = null;//not rejected
+<%
+		               		}							   
+%>   
+                 } catch (Exception e_<%=cid %>) { //try
+				 if (<%=debug%> == 1){
+                    e_<%=cid %>.printStackTrace();
+                 }
+				 String errorResponse_<%=cid %>  = e_<%=cid %>.toString();
+					String response_error_<%=cid %> = "NOT OK";
+					org.w3c.dom.Document doc_exp_<%=cid %> = null;
+					globalMap.put("<%=cid %>_RESPONSE_FROM_XERO", e_<%=cid %>.toString());
+					if (<%=debug%> == 1){
+						System.out.println(new Date()+"-INFO-Submitted xml request - "+inputxml_<%=cid %>);
+						System.out.println(new Date()+"-INFO-Response from Xero - "+e_<%=cid %>.toString());
+					}
+					if (e_<%=cid %> instanceof net.oauth.OAuthProblemException) {
+						net.oauth.OAuthProblemException oauthException_<%=cid %> = (net.oauth.OAuthProblemException) e_<%=cid %>;
+						if (oauthException_<%=cid %>.getParameters().containsKey("response-body")) {
+							errorResponse_<%=cid %> = (String) oauthException_<%=cid %>.getParameters().get("response-body");
+						}
+					}					
+					//get xml from exception by fetching text from <ApiException> ...<\ApiException>
+					if ( errorResponse_<%=cid %>.indexOf("<ApiException") != -1 
+						&& errorResponse_<%=cid %>.indexOf("ApiException>") != -1 
+					)
+					{
+						response_error_<%=cid %> = errorResponse_<%=cid %>.substring(errorResponse_<%=cid %>.indexOf("<ApiException"), errorResponse_<%=cid %>.indexOf("ApiException>")+13);
+						javax.xml.parsers.DocumentBuilder builder_exp_<%=cid %>;
+						builder_exp_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+						doc_exp_<%=cid %> = builder_exp_<%=cid %>.parse(new java.io.StringBufferInputStream(response_error_<%=cid %>));
+					}
+					if (doc_exp_<%=cid %> != null) {//doc_if_null							
+						if (doc_exp_<%=cid %>.getElementsByTagName("Message").getLength() != 0){
+							globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_exp_<%=cid %>.getElementsByTagName("Message").item(0).getTextContent());
+						}
+						if (doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").getLength() != 0){
+							globalMap.put("<%=cid %>_ERROR_CODE", doc_exp_<%=cid %>.getElementsByTagName("ErrorNumber").item(0).getTextContent());
+						}
+						org.w3c.dom.NodeList nodeList_exp_schemacol_<%=cid %> = null;
+						org.w3c.dom.Node nNode_exp_<%=cid %> = null;
+						org.w3c.dom.Element eElement_exp_<%=cid %> = null;
+						nodeList_exp_schemacol_<%=cid %> = doc_exp_<%=cid %>.getElementsByTagName("Elements");
+						nNode_exp_<%=cid %> = nodeList_exp_schemacol_<%=cid %>.item(0);
+						eElement_exp_<%=cid %> = (org.w3c.dom.Element) nNode_exp_<%=cid %>;
+						String strTemp_error_<%=cid %> = "";						
+						if ( eElement_exp_<%=cid %> != null && eElement_exp_<%=cid %>.getElementsByTagName("Message").getLength() > 0 ) {// sizecheck
+							for (int j_<%=cid %> = 0; j_<%=cid %> < eElement_exp_<%=cid %>.getElementsByTagName("Message").getLength(); j_<%=cid %> ++)
+							{//for
+								if (eElement_exp_<%=cid %>.getElementsByTagName("Message").item(j_<%=cid %>).getTextContent().length() != 0
+								&& eElement_exp_<%=cid %>.getElementsByTagName("Message").item(j_<%=cid %>).getTextContent() != null
+								) 
+								{
+									strTemp_error_<%=cid %> += eElement_exp_<%=cid %>.getElementsByTagName("Message").item(j_<%=cid %>).getTextContent();
+								}
+							}//for
+							globalMap.put("<%=cid %>_ERROR_ERRORS", strTemp_error_<%=cid %>);
+						}//sizecheck
+					}//doc_if_null	
+<%              		
+					if(dieOnError){//dieonerror	
+%>
+							throw new RuntimeException("Could not process row!");
+<%
+						} //dieonerror	
+					else { //dieonerror
+	               		if(  successConnName!=null && !successConnName.trim().equals("") && successColumnList!=null ){//success
+%>
+	               				<%=successConnName%> = null;//rejected
+<%
+ 	               		}//success
+						
+						if( rejectConnName!=null && !rejectConnName.trim().equals("") && rejectColumnList!=null ){ //reject
+%>
+							<%=rejectConnName%> = new <%=rejectConnName %>Struct();
+<%
+	               			for(IMetadataColumn column : columns) {
+%>
+	               				<%=rejectConnName%>.<%=column.getLabel()%> = <%=conn.getName()%>.<%=column.getLabel()%>;
+<%
+	               			}
+%>
+					if (doc_exp_<%=cid %> != null) {//doc_if_null
+							<%=rejectConnName%>.result_error_code = (String) globalMap.get("<%=cid %>_ERROR_CODE");
+	               			<%=rejectConnName%>.result_error_message = (String) globalMap.get("<%=cid %>_ERROR_MESSAGE");
+	               			<%=rejectConnName%>.result_errors =  (String) globalMap.get("<%=cid %>_ERROR_ERRORS");					
+					}//doc_if_null	
+<%					
+					}//reject
+					}//dieonerror		
+%>
+					}//try catch
+<%           
+            }//4
+        }//3
+    }//2
+}//1
+%>
