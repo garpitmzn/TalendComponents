@@ -88,7 +88,7 @@ saasu_apiurl_<%=cid %> += "/";
 			saasu_apiurl_<%=cid %> += "&utcLastModifiedTo="+<%=strutcLastModifiedTo %>;
 	}
 
-	if( "<%=module_name%>".equals("DeletedEntityList") )
+	if( "<%=module_name%>".equals("deletedEntityList") )
 	{
         saasu_apiurl_<%=cid %> += "&EntityTypeUid=10";
 	}                     
@@ -110,7 +110,7 @@ saasu_apiurl_<%=cid %> += "/";
 				System.out.println(new Date()+"-INFO-Submitted http request - "+saasu_apiurl_<%=cid %>);
 				System.out.println(new Date()+"-INFO-Response from Saasu - "+response_<%=cid%>);
             }
-			globalMap.put("<%=cid %>_RESPONSE_FROM_SAASU",response_<%=cid%>);
+			globalMap.put("<%=cid %>_RESPONSE_FROM_SAASU",response_<%=cid%>.toString());
 			
 		if(response_<%=cid%>.getStatus() == 200)
 		{//responseok		

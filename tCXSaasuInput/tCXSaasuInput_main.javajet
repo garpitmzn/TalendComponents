@@ -26,6 +26,11 @@
 	int size_filter_input_list = filter_input_list.size();
 	
 %>
+	org.w3c.dom.NodeList nList_schemacol_child_<%=cid %> = null;
+	org.w3c.dom.Node nNode_child_<%=cid %> = null;
+	org.w3c.dom.Element eElement_child_<%=cid %> = null;
+	org.w3c.dom.NodeList nList_child_<%=cid %> = null;
+
 <%
             for(int g = 0; g < size_filter_input_list; g++){ //for-size_filter_input
 				Map<String, String> filter_input_listmap = filter_input_list.get(g);
@@ -57,7 +62,8 @@
 				strColumnNameLabel = column.getLabel();
 				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("contactUid") ){	//if01	
 %>
-					if (eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("uid").getTextContent() != null
+					if ( eElement_<%=cid %>.getElementsByTagName("contact").item(0) != null
+					&& eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("uid").getTextContent() != null
 					&& eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("uid").getTextContent().length() !=0){
 						<%=outputConnName %>.<%=column.getLabel() %> = Integer.parseInt(eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("uid").getTextContent());
 					}
@@ -65,19 +71,202 @@
 				} //if01
 				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("lastUpdatedUid") ){	//if02 
 %>				
-					if (eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("lastUpdatedUid").getTextContent() != null
+					if ( eElement_<%=cid %>.getElementsByTagName("contact").item(0) != null
+					&& eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("lastUpdatedUid").getTextContent() != null
 					&& eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("lastUpdatedUid").getTextContent().length() !=0){
 						<%=outputConnName %>.<%=column.getLabel() %> = eElement_<%=cid %>.getElementsByTagName("contact").item(0).getAttributes().getNamedItem("lastUpdatedUid").getTextContent();
 					}
 <%
 				}//if02
-				if (( IsFilterBycontactUid == true && !strColumnNameLabel.equals("contactUid") && !strColumnNameLabel.equals("lastUpdatedUid") )
+%>
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("otherStreet") ){	//if04
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("otherAddress");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("street").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("street").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("street").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = eElement_child_<%=cid %>.getElementsByTagName("street").item(0).getTextContent();
+					}
+				}	//childfor		
+						
+<%
+				}//if04
+%>
+
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("otherCity") ){	//if05
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("otherAddress");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("city").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("city").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("city").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = eElement_child_<%=cid %>.getElementsByTagName("city").item(0).getTextContent();
+					}
+				}	//childfor		
+						
+<%
+				}//if05
+%>
+
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("otherState") ){	//if04
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("otherAddress");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("state").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("state").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("state").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = eElement_child_<%=cid %>.getElementsByTagName("state").item(0).getTextContent();
+					}
+				}	//childfor		
+						
+<%
+				}//if04
+%>
+
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("otherPostCode") ){	//if06
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("otherAddress");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("postCode").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("postCode").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("postCode").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = eElement_child_<%=cid %>.getElementsByTagName("postCode").item(0).getTextContent();
+					}
+				}	//childfor		
+						
+<%
+				}//if06
+%>
+
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("otherCountry") ){	//if07
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("otherAddress");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("country").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("country").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("country").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = eElement_child_<%=cid %>.getElementsByTagName("country").item(0).getTextContent();
+					}
+				}	//childfor		
+						
+<%
+				}//if07
+%>
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("emailAddress") ){	//if08
+%>				
+					if (  eElement_<%=cid %>.getElementsByTagName("email").item(0) != null
+					&& eElement_<%=cid %>.getElementsByTagName("email").item(0).getTextContent() != null
+					&& eElement_<%=cid %>.getElementsByTagName("email").item(0).getTextContent().length() !=0){
+						<%=outputConnName %>.<%=column.getLabel() %> = eElement_<%=cid %>.getElementsByTagName("email").item(0).getTextContent();
+					}
+<%
+				}//if08
+%>
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("saleTradingTermsType") ){	//if09
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("saleTradingTerms");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("type").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("type").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("type").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = Integer.parseInt(eElement_child_<%=cid %>.getElementsByTagName("type").item(0).getTextContent());
+					}
+				}	//childfor		
+						
+<%
+				}//if09
+%>
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("saleTradingTermsPaymentDueInInterval") ){	//if10
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("saleTradingTerms");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("interval").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("interval").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("interval").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = Integer.parseInt(eElement_child_<%=cid %>.getElementsByTagName("interval").item(0).getTextContent());
+					}
+				}	//childfor		
+						
+<%
+				}//if10
+%>
+<%
+				if ( IsFilterBycontactUid == true && strColumnNameLabel.equals("saleTradingTermsPaymentDueInIntervalType") ){	//if11
+%>				
+					nList_child_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("saleTradingTerms");
+					for (int j_<%=cid %> = 0; j_<%=cid %> < nList_child_<%=cid %>.getLength(); j_<%=cid %>++) {//childfor
+						nNode_child_<%=cid %> = nList_child_<%=cid %>.item(j_<%=cid %>);
+						eElement_child_<%=cid %> = (org.w3c.dom.Element) nNode_child_<%=cid %>;
+					
+					if ( eElement_child_<%=cid %>.getElementsByTagName("intervalType").item(0) != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("intervalType").item(0).getTextContent() != null
+					&& eElement_child_<%=cid %>.getElementsByTagName("intervalType").item(0).getTextContent().length() !=0)
+					{
+						<%=outputConnName %>.<%=column.getLabel() %> = Integer.parseInt(eElement_child_<%=cid %>.getElementsByTagName("intervalType").item(0).getTextContent());
+					}
+				}	//childfor		
+						
+<%
+				}//if11
+%>
+<%				
+				if (( IsFilterBycontactUid == true 
+						&& !strColumnNameLabel.equals("contactUid") 
+						&& !strColumnNameLabel.equals("lastUpdatedUid") 
+						&& !strColumnNameLabel.equals("otherStreet") 
+						&& !strColumnNameLabel.equals("otherCity") 
+						&& !strColumnNameLabel.equals("otherState") 
+						&& !strColumnNameLabel.equals("otherPostCode") 
+						&& !strColumnNameLabel.equals("otherCountry") 
+						&& !strColumnNameLabel.equals("emailAddress") 
+						&& !strColumnNameLabel.equals("saleTradingTermsType") 
+						&& !strColumnNameLabel.equals("saleTradingTermsPaymentDueInInterval") 
+						&& !strColumnNameLabel.equals("saleTradingTermsPaymentDueInIntervalType")						
+						)
 						|| (IsFilterBycontactUid == false) 
 				)
 				{	//if03			
 %>				
 				
-					if (eElement_<%=cid %>.getElementsByTagName("<%=strColumnNameLabel %>").item(0).getTextContent() != null
+					if ( eElement_<%=cid %>.getElementsByTagName("<%=strColumnNameLabel %>").item(0) != null 
+						&& eElement_<%=cid %>.getElementsByTagName("<%=strColumnNameLabel %>").item(0).getTextContent() != null
 					&& eElement_<%=cid %>.getElementsByTagName("<%=strColumnNameLabel %>").item(0).getTextContent().length() !=0)
 					{//nullcheck
 						strAttributeValueIfFound_<%=cid %> = eElement_<%=cid %>.getElementsByTagName("<%=strColumnNameLabel %>").item(0).getTextContent();
@@ -122,6 +311,10 @@
 					}
 				%>
 				}//nullcheck
+				else {
+						<%=outputConnName %>.<%=column.getLabel() %> = <%=JavaTypesManager.getDefaultValueFromJavaType(ttg)%>;
+				}
+				
 <%					
 			}//if03
 			}//4
