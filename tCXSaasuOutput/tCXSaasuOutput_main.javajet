@@ -1,0 +1,472 @@
+<%@ jet
+	imports="
+	org.talend.core.model.process.INode
+	org.talend.core.model.process.ElementParameterParser
+	org.talend.core.model.metadata.IMetadataTable
+	org.talend.core.model.metadata.IMetadataColumn
+	org.talend.core.model.process.IConnection
+	org.talend.core.model.process.IConnectionCategory
+	org.talend.designer.codegen.config.CodeGeneratorArgument
+	org.talend.core.model.process.EConnectionType
+	org.talend.core.model.metadata.types.JavaTypesManager
+	org.talend.core.model.metadata.types.JavaType
+	java.util.List
+	java.util.HashMap
+	java.util.Map
+	java.util.ArrayList
+	"
+%>
+<%
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    String connName = null;
+
+    if (node.getIncomingConnections().size() == 1) {
+      IConnection conn = node.getIncomingConnections().get(0);
+      connName = conn.getName();
+    }
+    //SUCCESS connection
+    String successConnName = null;
+    List<? extends IConnection> successConns = node.getOutgoingConnections("SUCCESS");
+    if(successConns != null && successConns.size() > 0) {
+        IConnection successConn = successConns.get(0);
+        successConnName = successConn.getName();
+    }
+   
+    List<IMetadataColumn> successColumnList = null;
+    IMetadataTable metadataTable2 = node.getMetadataFromConnector("SUCCESS");
+    if(metadataTable2 != null) {
+        successColumnList = metadataTable2.getListColumns();     
+    }
+   	
+	//REJECT connection
+	String rejectConnName = null;
+	List<? extends IConnection> rejectConns = node.getOutgoingConnections("REJECT");
+	if(rejectConns != null && rejectConns.size() > 0) {
+		IConnection rejectConn = rejectConns.get(0);
+	    rejectConnName = rejectConn.getName();
+	}
+	
+	List<IMetadataColumn> rejectColumnList = null;
+	IMetadataTable metadataTable = node.getMetadataFromConnector("REJECT");
+	if(metadataTable != null) {
+	    rejectColumnList = metadataTable.getListColumns();      
+	}
+	
+	final String dieOnError = ElementParameterParser.getValue(node, "__DIE_ON_ERROR__");
+	
+	String saasu_apiurl = ElementParameterParser.getValue(node, "__SAASUAPIURL__");
+	String module_name = ElementParameterParser.getValue(node, "__MODULENAME__").substring(ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")+1);
+	String api_method = ElementParameterParser.getValue(node, "__METHOD__").substring(ElementParameterParser.getValue(node, "__METHOD__").indexOf(":")+1);
+	String saasu_file_id = ElementParameterParser.getValue(node, "__FILEID__");
+	String saasu_web_service_access_key = ElementParameterParser.getValue(node, "__WEBSERVICESACCESSKEY__");		
+	String xmlNode = ElementParameterParser.getValue(node, "__METHOD__").substring(0,ElementParameterParser.getValue(node, "__METHOD__").indexOf(":"));
+	String tasks = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":"));    
+	String deleteTask = module_name.toLowerCase();		
+	String debug = ElementParameterParser.getValue(node, "__DEBUG__");	
+    String xmlRootNode = ElementParameterParser.getValue(node, "__MODULENAME__").substring(0,ElementParameterParser.getValue(node, "__MODULENAME__").indexOf(":")).toLowerCase();
+    String xmlParentNode =  xmlNode + module_name;
+    String xmlSubNode = module_name.toLowerCase();
+    String strColumnNameLabel;
+%>
+	
+	org.w3c.dom.Document doc_<%=cid %>;
+	org.w3c.dom.NodeList nList_<%=cid %>;
+	javax.xml.parsers.DocumentBuilder builder_<%=cid %>;
+	java.util.HashMap successData__<%=cid %> = new java.util.HashMap();
+	com.sun.jersey.api.client.ClientResponse response_<%=cid%>;
+    String contactUid_<%=cid %> = "";
+    String lastUpdatedUid_<%=cid %> = "";
+
+    String inputxml_<%=cid %> = "";
+    String inputxml_Address_POSTAL_<%=cid %> = "";
+    String inputxml_Address_OTHER_<%=cid %> = "";
+    String inputxml_SALE_TRADING_TERMS_<%=cid %> = "";  
+    String inputxml_PURCHASE_TRADING_TERMS_<%=cid %> = "";  
+
+   	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+   	{
+	    inputxml_<%=cid %> += "<?xml version='1.0' encoding='utf-8' ?>"+"\n";
+	    inputxml_<%=cid %> += "<" + "<%=xmlRootNode %>" + ">" + "\n";
+	    inputxml_<%=cid %> += "<" + "<%=xmlParentNode %>" + ">" + "\n";
+	    
+		if("<%=api_method%>".equalsIgnoreCase("POST"))//For Insert
+			inputxml_<%=cid %> += "<"+ "<%=xmlSubNode%>" + " uid='0' " + ">" + "\n";
+			
+		if("<%=api_method%>".equalsIgnoreCase("PUT"))//For Update
+			inputxml_<%=cid %> += "<"+ "<%=xmlSubNode%>" ;
+	}
+			
+	String saasu_apiurl_<%=cid%> = <%=saasu_apiurl%>;
+
+	if( "<%=api_method%>".equalsIgnoreCase("DELETE") )
+        saasu_apiurl_<%=cid %> += "/<%=deleteTask%>";
+	else
+		saasu_apiurl_<%=cid %> += "/<%=tasks%>";
+
+
+if ( !<%=saasu_web_service_access_key%>.equals("") && <%=saasu_web_service_access_key%> != null ) 
+		saasu_apiurl_<%=cid %> += "?WSAccessKey="+<%=saasu_web_service_access_key%>;
+
+if ( !<%=saasu_file_id%>.equals("") && <%=saasu_file_id%> != null) 
+		saasu_apiurl_<%=cid %> += "&FileUid="+<%=saasu_file_id%>;
+		
+    
+<%
+
+List<IMetadataTable> metadatas = node.getMetadataList();
+if ((metadatas!=null)&&(metadatas.size()>0)) {//1
+    IMetadataTable metadata = metadatas.get(0);
+    if (metadata!=null) {//2
+        
+		
+    	List< ? extends IConnection> conns = node.getIncomingConnections();
+    	for (IConnection conn : conns) {//3
+    		
+    		if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {//4
+    			List<IMetadataColumn> columns = metadata.getListColumns();
+    			int sizeColumns = columns.size();
+				
+    			for (int i=0; i < sizeColumns; i++ ){ //5
+    				IMetadataColumn column = columns.get(i);
+    				JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+    				boolean isPrimitive = JavaTypesManager.isJavaPrimitiveType( javaType, column.isNullable());
+    				strColumnNameLabel = column.getLabel();
+    				
+%>
+<%
+    if( !isPrimitive ) {    //prim
+    
+%>
+    
+    if(<%=conn.getName() %>.<%=column.getLabel() %> != null) { //nullcheck
+    
+<%
+    }
+    else{ //prim
+%>
+
+    if(!"".equals(String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>))) { //nullcheck
+    
+<%   
+     } //prim
+%>
+
+<%
+        if ( column.getLabel().equals("contactUid")) {
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+				contactUid_<%=cid %> = String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+				inputxml_<%=cid %> +=  " uid = '" + contactUid_<%=cid %> + "'";
+			}
+			else //delete
+			{
+				contactUid_<%=cid %> = String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+			}
+<%
+		}
+		else if ( column.getLabel().equals("lastUpdatedUid")) {
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+				lastUpdatedUid_<%=cid %> = String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+				inputxml_<%=cid %> +=  " lastUpdatedUid = '" + lastUpdatedUid_<%=cid %> + "'" + ">" + "\n";;
+			}
+<%
+		}
+        else if ( column.getLabel().equals("otherStreet") || column.getLabel().equals("otherCity") ||
+         column.getLabel().equals("otherState") || column.getLabel().equals("otherPostCode") || column.getLabel().equals("otherCountry")) {
+         	strColumnNameLabel = strColumnNameLabel.substring(5).toLowerCase();
+         	if(strColumnNameLabel.equals("postcode"))
+         		strColumnNameLabel = "postCode";
+ %>
+         	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+	            inputxml_Address_OTHER_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+	            inputxml_Address_OTHER_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+	            inputxml_Address_OTHER_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+	        }
+<%       
+         }
+        else if ( column.getLabel().equals("street") || column.getLabel().equals("city") ||
+         column.getLabel().equals("state") || column.getLabel().equals("postCode") || column.getLabel().equals("country")) {
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+	            inputxml_Address_POSTAL_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+	            inputxml_Address_POSTAL_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+	            inputxml_Address_POSTAL_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+			}			
+<%
+		}
+        else if ( column.getLabel().contains("saleTradingTerms")) {
+           	if(strColumnNameLabel.equals("saleTradingTermsType"))
+         		strColumnNameLabel = "type";
+         	if(strColumnNameLabel.equals("saleTradingTermsPaymentDueInInterval"))
+         		strColumnNameLabel = "interval";
+         	if(strColumnNameLabel.equals("saleTradingTermsPaymentDueInIntervalType"))
+         		strColumnNameLabel = "intervalType";        	
+        
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+	            inputxml_SALE_TRADING_TERMS_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+	            inputxml_SALE_TRADING_TERMS_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+	            inputxml_SALE_TRADING_TERMS_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+	         }           
+<%       
+        }
+        else if ( column.getLabel().contains("purchaseTradingTerms")) {
+         	if(strColumnNameLabel.equals("purchaseTradingTermsType"))
+         		strColumnNameLabel = "type";
+         	if(strColumnNameLabel.equals("purchaseTradingTermsPaymentDueInInterval"))
+         		strColumnNameLabel = "interval";
+         	if(strColumnNameLabel.equals("purchaseTradingTermsPaymentDueInIntervalType"))
+         		strColumnNameLabel = "intervalType";        	
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+	            inputxml_PURCHASE_TRADING_TERMS_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+	            inputxml_PURCHASE_TRADING_TERMS_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+	            inputxml_PURCHASE_TRADING_TERMS_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+	        }           
+<%       
+         }
+        else if ( column.getLabel().contains("companyEmail") || column.getLabel().contains("emailAddress")) {
+           	if(strColumnNameLabel.equals("emailAddress"))
+         		strColumnNameLabel = "email";
+        
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+	            inputxml_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+	            inputxml_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+	            inputxml_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+	         }           
+<%       
+         }
+        else if ( column.getLabel().equals("directDepositAccountBsb")) {
+         		strColumnNameLabel = "directDepositBsb";
+        
+%>
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+        	{
+	            inputxml_<%=cid %> += "<" + "<%=strColumnNameLabel%>" + ">";
+	            inputxml_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+	            inputxml_<%=cid %> += "</" + "<%=strColumnNameLabel%>" + ">" + "\n";
+	         }           
+<%       
+         }                                 
+        else {
+%>
+	        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+	        	{
+		            inputxml_<%=cid %> += "<" + "<%=column.getLabel()%>" + ">";   
+		            inputxml_<%=cid %> += String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>);
+		            inputxml_<%=cid %> += "</" + "<%=column.getLabel()%>" + ">" + "\n";
+		         }
+<%       
+            }
+%>
+
+    }//nullcheck
+<%
+	    		} //5
+%>
+
+//to create xml and send request,  response success and reject flow
+
+   	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+   	{	
+	    inputxml_<%=cid %> += "<postalAddress>" + "\n" + inputxml_Address_POSTAL_<%=cid %> + "</postalAddress>" + "\n";
+	    inputxml_<%=cid %> += "<otherAddress>" + "\n" + inputxml_Address_OTHER_<%=cid %> + "</otherAddress>" + "\n";
+	    inputxml_<%=cid %> += "<saleTradingTerms>" + "\n" + inputxml_SALE_TRADING_TERMS_<%=cid %> +  "</saleTradingTerms>"  + "\n";
+	    inputxml_<%=cid %> += "<purchaseTradingTerms>" + "\n" + inputxml_PURCHASE_TRADING_TERMS_<%=cid %> +  "</purchaseTradingTerms>"  + "\n";
+	   
+	    inputxml_<%=cid %> += "</<%=xmlSubNode%>>" + "\n";
+	    inputxml_<%=cid %> += "</" + "<%=xmlParentNode %>" + ">" + "\n";
+	    inputxml_<%=cid %> += "</" + "<%=xmlRootNode %>" + ">";  
+	}         
+    globalMap.put("<%=cid %>_XML_REQUEST", inputxml_<%=cid %>);
+    
+
+try{//try	
+	
+	if("<%=api_method%>".equalsIgnoreCase("delete"))
+		saasu_apiurl_<%=cid %> += "&uid="+ contactUid_<%=cid %>;
+		
+	com.sun.jersey.api.client.WebResource resource_<%=cid%> = client_<%=cid%>.resource(saasu_apiurl_<%=cid %>);
+
+
+   	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
+   	{
+   			
+		response_<%=cid%> = 
+	    					resource_<%=cid%>
+	    					.accept(javax.ws.rs.core.MediaType.APPLICATION_XML)
+	    					.type(javax.ws.rs.core.MediaType.APPLICATION_XML)
+	    					.post(com.sun.jersey.api.client.ClientResponse.class,inputxml_<%=cid %>);
+	 }
+	 else
+	 {
+		response_<%=cid%> = 
+	    					resource_<%=cid%>
+	    					.accept(javax.ws.rs.core.MediaType.APPLICATION_XML)
+	    					.delete(com.sun.jersey.api.client.ClientResponse.class);
+	 	 
+	 }   					
+
+	 
+	if (<%=debug%> == 1){
+		System.out.println(new Date()+"-INFO-Submitted http request - "+saasu_apiurl_<%=cid %>);
+		System.out.println(new Date()+"-INFO-Submitted xml request - "+inputxml_<%=cid %>);
+		System.out.println(new Date()+"-INFO-Response from Saasu - "+response_<%=cid%>);
+	}
+
+	
+	globalMap.put("<%=cid %>_RESPONSE_FROM_SAASU",response_<%=cid%>.toString());
+
+if(response_<%=cid%>.getStatus() == 200){//responseok
+
+	String output_<%=cid%> = response_<%=cid%>.getEntity(String.class);
+ 	
+    builder_<%=cid %> = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder();
+ 	doc_<%=cid %> = builder_<%=cid %>.parse(new org.xml.sax.InputSource( new java.io.StringReader( output_<%=cid%> ) ));
+
+	if (doc_<%=cid %> != null){ //doc_if_null
+
+		if (doc_<%=cid %>.getElementsByTagName("errors").getLength() == 0)//row success
+		{
+        	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))					
+				nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=xmlParentNode%>Result");
+			else
+				nList_<%=cid %> = doc_<%=cid %>.getElementsByTagName("<%=xmlNode%>Result");
+		
+			if((nList_<%=cid %> != null) && (nList_<%=cid %>.getLength() > 0)){// null check 
+				for (int i_<%=cid %> = 0; i_<%=cid %> < nList_<%=cid %>.getLength(); i_<%=cid %>++) {//parentfor
+					org.w3c.dom.Node nNode_<%=cid %> = nList_<%=cid %>.item(i_<%=cid %>);				
+			        if (nNode_<%=cid %>.getAttributes() != null) {  
+				            for (int x = 0; x < nNode_<%=cid %>.getAttributes().getLength(); x++) {  
+				                  successData__<%=cid %>.put(nNode_<%=cid %>.getAttributes().item(x).getNodeName(),nNode_<%=cid %>.getAttributes().item(x).getNodeValue());       
+					            }  
+					     }  
+				  }				
+<%
+	               			//successful, propagate columns, add ID
+	               			if(  successConnName!=null && !successConnName.trim().equals("") && successColumnList!=null ){//success
+	               			
+%>	               
+								String strSuccessColumnNameLabel;
+								<%=successConnName%> = new <%=successConnName%>Struct();							
+<%	               			
+		               			for (IMetadataColumn column: successColumnList) {
+		               				JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+									String pattern = column.getPattern() == null || column.getPattern().trim().length() == 0 ? null : column.getPattern();
+		               				if (column.isCustom()) { //i1
+										if (column.getLabel().equals("id")){//id
+											if ( api_method.equalsIgnoreCase("POST") ){//post
+%>
+									<%=successConnName%>.<%=column.getLabel()%> = successData__<%=cid %>.get("insertedEntityUid").toString();
+<%											
+											}//post
+											if ( api_method.equalsIgnoreCase("PUT") ){//put
+%>
+									<%=successConnName%>.<%=column.getLabel()%> = successData__<%=cid %>.get("updatedEntityUid").toString();
+<%										
+											}//put		
+											if ( api_method.equalsIgnoreCase("DELETE") ){//delete	
+%>
+									<%=successConnName%>.<%=column.getLabel()%> = successData__<%=cid %>.get("uid").toString();
+<%
+											}//delete		
+										}//id
+%>
+									
+<%
+										if (column.getLabel().equals("updated_at") && !api_method.equalsIgnoreCase("DELETE")){//updated_at
+%>
+									<%=successConnName%>.<%=column.getLabel()%> = FastDateParser.getInstance(<%=pattern%>).parse(successData__<%=cid %>.get("utcLastModified").toString());
+<%											
+										}//updated_at
+%>									
+									
+<%
+									}//i1
+								}
+		               		}//success
+		               		
+		               		//row is not rejected
+		               		if( rejectConnName!=null && !rejectConnName.trim().equals("") ){
+ %>
+		               				<%=rejectConnName%> = null;//not rejected
+<%
+		               		}
+%>
+						nb_line_<%=cid %>++;
+						globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);
+	  			}// null check						
+			}//row success
+			else {//row rejected
+						//In case of error message xml 
+						if (doc_<%=cid %>.getElementsByTagName("type").getLength() != 0){
+							globalMap.put("<%=cid %>_ERROR_CODE", doc_<%=cid %>.getElementsByTagName("type").item(0).getTextContent());
+						}
+						//In case of error message xml 	
+						if (doc_<%=cid %>.getElementsByTagName("message").getLength() != 0){
+							globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_<%=cid %>.getElementsByTagName("message").item(0).getTextContent());
+						}
+						
+						
+<%
+               			if(  successConnName!=null && !successConnName.trim().equals("") && successColumnList!=null ){//success
+%>
+	               				<%=successConnName%> = null;//rejected
+ <%
+ 				   		}
+						
+              			if("true".equals(dieOnError)){
+ %>
+							throw new RuntimeException("Could not process row!");
+ <%
+						} else if( rejectConnName!=null && !rejectConnName.trim().equals("") && rejectColumnList!=null ){
+ %>
+							<%=rejectConnName%> = new <%=rejectConnName %>Struct();
+							<%=rejectConnName%>.result_error_code = doc_<%=cid %>.getElementsByTagName("type").item(0).getTextContent();
+	               			<%=rejectConnName%>.result_error_message = doc_<%=cid %>.getElementsByTagName("message").item(0).getTextContent();
+ <%						
+						} else {
+ %>
+							System.err.println("Failed to process row!");	               			
+ <%
+						}
+ %>	    									
+						
+						
+		}// row rejected	
+	}//doc_if_null
+
+}//responseok
+} catch (Exception e) {
+<%
+	if("true".equals(dieOnError)){//die
+%>	
+	throw new RuntimeException("Error");
+<%
+} else {
+%>
+	if (<%=debug %> == 1){ //debug
+		e.printStackTrace();
+	}	
+<%
+}//die
+%>
+}
+//to create xml and send request get response success reject flow
+<%
+			} //4
+		} //3
+	} //2
+} //1
+%>			    
