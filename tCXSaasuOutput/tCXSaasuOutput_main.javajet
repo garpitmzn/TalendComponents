@@ -84,7 +84,7 @@
     String inputxml_Address_OTHER_<%=cid %> = "";
     String inputxml_SALE_TRADING_TERMS_<%=cid %> = "";  
     String inputxml_PURCHASE_TRADING_TERMS_<%=cid %> = "";  
-
+	
    	if(("<%=api_method%>".equalsIgnoreCase("POST")) || ("<%=api_method%>".equalsIgnoreCase("PUT")))
    	{
 	    inputxml_<%=cid %> += "<?xml version='1.0' encoding='utf-8' ?>"+"\n";
@@ -319,7 +319,7 @@ try{//try
 	 }   					
 
 	 
-	if (<%=debug%> == 1){
+	if (<%=debug %> == 1){
 		System.out.println(new Date()+"-INFO-Submitted http request - "+saasu_apiurl_<%=cid %>);
 		System.out.println(new Date()+"-INFO-Submitted xml request - "+inputxml_<%=cid %>);
 		System.out.println(new Date()+"-INFO-Response from Saasu - "+response_<%=cid%>);
@@ -360,6 +360,13 @@ if(response_<%=cid%>.getStatus() == 200){//responseok
 %>	               
 								String strSuccessColumnNameLabel;
 								<%=successConnName%> = new <%=successConnName%>Struct();							
+<%
+		               			for(IMetadataColumn column : columns) {//col
+%>
+		               				<%=successConnName%>.<%=column.getLabel()%> = <%=conn.getName()%>.<%=column.getLabel()%>;
+<%
+		               			}//col
+%>
 <%	               			
 		               			for (IMetadataColumn column: successColumnList) {
 		               				JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
@@ -417,8 +424,7 @@ if(response_<%=cid%>.getStatus() == 200){//responseok
 						if (doc_<%=cid %>.getElementsByTagName("message").getLength() != 0){
 							globalMap.put("<%=cid %>_ERROR_MESSAGE", doc_<%=cid %>.getElementsByTagName("message").item(0).getTextContent());
 						}
-						
-						
+								
 <%
                			if(  successConnName!=null && !successConnName.trim().equals("") && successColumnList!=null ){//success
 %>
@@ -432,7 +438,15 @@ if(response_<%=cid%>.getStatus() == 200){//responseok
  <%
 						} else if( rejectConnName!=null && !rejectConnName.trim().equals("") && rejectColumnList!=null ){
  %>
-							<%=rejectConnName%> = new <%=rejectConnName %>Struct();
+ 							<%=rejectConnName%> = new <%=rejectConnName %>Struct();
+<%
+	               			for(IMetadataColumn column : columns) {
+%>
+	               				<%=rejectConnName%>.<%=column.getLabel()%> = <%=conn.getName()%>.<%=column.getLabel()%>;
+<%
+	               			}
+%>
+ 							
 							<%=rejectConnName%>.result_error_code = doc_<%=cid %>.getElementsByTagName("type").item(0).getTextContent();
 	               			<%=rejectConnName%>.result_error_message = doc_<%=cid %>.getElementsByTagName("message").item(0).getTextContent();
  <%						
@@ -452,7 +466,7 @@ if(response_<%=cid%>.getStatus() == 200){//responseok
 <%
 	if("true".equals(dieOnError)){//die
 %>	
-	throw new RuntimeException("Error");
+	throw e;
 <%
 } else {
 %>
